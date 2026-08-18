@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import engine, Base
-from .routes import checklists, diary, agenda
+from database import engine, Base
+from routes import checklists, diary, agenda
 
 # Create tables
 Base.metadata.create_all(bind=engine)

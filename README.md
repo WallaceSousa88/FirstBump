@@ -1,6 +1,6 @@
 # FirstBump: Guia para a Primeira Gestação
 
-Uma **aplicação web modular** desenvolvida com o duplo propósito de **portfólio técnico** e **ferramenta prática** para auxiliar mães e pais durante a primeira gestação.
+Uma **aplicação web modular** desenvolvida com o duplo propósito de **ferramenta prática** para auxiliar mães e pais durante a primeira gestação e **portfólio técnico**.
 
 ## Objetivo do Projeto
 
