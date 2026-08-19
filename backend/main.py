@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routes import checklists, diary, agenda
+from routes import checklists, diary, agenda, settings
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(checklists.router)
 app.include_router(diary.router)
 app.include_router(agenda.router)
+app.include_router(settings.router)
 
 @app.get("/")
 def read_root():

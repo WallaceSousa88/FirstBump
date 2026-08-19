@@ -26,3 +26,9 @@ class AgendaEvent(Base):
     title = Column(String, index=True)
     description = Column(String, nullable=True)
     type = Column(String) # e.g., 'consulta', 'exame'
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key = Column(String, primary_key=True, index=True)
+    value = Column(String)

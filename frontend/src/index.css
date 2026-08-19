@@ -255,3 +255,19 @@ input, textarea {
   padding: 40px 20px;
   color: var(--text-muted);
 }
+
+/* Progress Bar */
+.progress-container {
+  width: 100%;
+  background-color: var(--border);
+  border-radius: var(--radius-lg);
+  height: 16px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: var(--accent);
+  transition: width 0.5s ease;
+}

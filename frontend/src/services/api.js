@@ -62,5 +62,20 @@ export const api = {
   deleteAgendaEvent: async (id) => {
     const res = await fetch(`${API_URL}/agenda/${id}`, { method: 'DELETE' });
     return res.json();
+  },
+
+  // Settings
+  getSetting: async (key) => {
+    const res = await fetch(`${API_URL}/settings/${key}`);
+    if (!res.ok) return null;
+    return res.json();
+  },
+  setSetting: async (key, value) => {
+    const res = await fetch(`${API_URL}/settings/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value })
+    });
+    return res.json();
   }
 };

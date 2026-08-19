@@ -53,3 +53,15 @@ class AgendaEvent(AgendaEventBase):
 
     class Config:
         from_attributes = True
+
+# Settings
+class AppSettingBase(BaseModel):
+    key: str
+    value: str
+
+class AppSettingCreate(AppSettingBase):
+    pass
+
+class AppSetting(AppSettingBase):
+    class Config:
+        from_attributes = True
