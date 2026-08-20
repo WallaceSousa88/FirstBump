@@ -64,6 +64,52 @@ input, textarea {
   display: flex;
   flex-direction: column;
   padding: 24px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-footer-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.sidebar-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-main);
+  background: none;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 8px;
+}
+
+.sidebar-action-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.sidebar-footer-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 8px;
 }
 
 .sidebar-logo {
