@@ -1,12 +1,13 @@
 import { useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Home, ListChecks, BookOpen, CalendarHeart, Library, Download, Upload } from 'lucide-react';
+import { Home, ListChecks, BookOpen, CalendarHeart, Library, Timer, Download, Upload } from 'lucide-react';
 import { storage } from './services/storage';
 import Dashboard from './pages/Dashboard';
 import Checklists from './pages/Checklists';
 import Diary from './pages/Diary';
 import Agenda from './pages/Agenda';
 import Guides from './pages/Guides';
+import Contractions from './pages/Contractions';
 
 function App() {
   const importRef = useRef(null);
@@ -49,6 +50,9 @@ function App() {
             <NavLink to="/agenda" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
               <CalendarHeart size={20} /> Agenda
             </NavLink>
+            <NavLink to="/contractions" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <Timer size={20} /> Contrações
+            </NavLink>
             <NavLink to="/guides" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
               <Library size={20} /> Biblioteca
             </NavLink>
@@ -82,6 +86,7 @@ function App() {
             <Route path="/checklists" element={<Checklists />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/agenda" element={<Agenda />} />
+            <Route path="/contractions" element={<Contractions />} />
             <Route path="/guides" element={<Guides />} />
           </Routes>
         </main>

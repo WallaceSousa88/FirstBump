@@ -3,6 +3,7 @@ const KEYS = {
   diary: 'firstbump_diary',
   agenda: 'firstbump_agenda',
   settings: 'firstbump_settings',
+  contractions: 'firstbump_contractions',
 };
 
 function generateId() {
@@ -81,6 +82,28 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Contractions ─────────────────────────────────────────────────────────────
+  getContractions: () => {
+    const items = getAll(KEYS.contractions);
+    return items.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+  },
+  createContraction: (data) => {
+    const items = getAll(KEYS.contractions);
+    const newItem = { ...data, id: generateId() };
+    items.push(newItem);
+    saveAll(KEYS.contractions, items);
+    return newItem;
+  },
+  deleteContraction: (id) => {
+    const items = getAll(KEYS.contractions).filter(i => i.id !== id);
+    saveAll(KEYS.contractions, items);
+    return { ok: true };
+  },
+  clearContractions: () => {
+    saveAll(KEYS.contractions, []);
+    return { ok: true };
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -101,6 +124,7 @@ export const storage = {
       checklists: getAll(KEYS.checklists),
       diary: getAll(KEYS.diary),
       agenda: getAll(KEYS.agenda),
+      contractions: getAll(KEYS.contractions),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -119,10 +143,11 @@ export const storage = {
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.checklists) saveAll(KEYS.checklists, data.checklists);
-          if (data.diary)       saveAll(KEYS.diary, data.diary);
-          if (data.agenda)      saveAll(KEYS.agenda, data.agenda);
-          if (data.settings)    localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
+          if (data.checklists)    saveAll(KEYS.checklists, data.checklists);
+          if (data.diary)         saveAll(KEYS.diary, data.diary);
+          if (data.agenda)        saveAll(KEYS.agenda, data.agenda);
+          if (data.contractions)  saveAll(KEYS.contractions, data.contractions);
+          if (data.settings)      localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {
           reject(new Error('Arquivo inválido. Certifique-se de importar um backup do FirstBump.'));
