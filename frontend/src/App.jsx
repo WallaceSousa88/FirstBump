@@ -1,6 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Home, ListChecks, BookOpen, CalendarHeart, Library, Timer, Download, Upload } from 'lucide-react';
+import { Home, ListChecks, BookOpen, CalendarHeart, Library, Timer, Download, Upload, Sun, Moon } from 'lucide-react';
 import { storage } from './services/storage';
 import Dashboard from './pages/Dashboard';
 import Checklists from './pages/Checklists';
@@ -11,6 +11,21 @@ import Contractions from './pages/Contractions';
 
 function App() {
   const importRef = useRef(null);
+
+  const [theme, setTheme] = useState(() => {
+    const saved = storage.getSetting('theme');
+    if (saved && saved.value) return saved.value;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    storage.setSetting('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   const handleExport = () => {
     storage.exportData();
@@ -58,8 +73,19 @@ function App() {
             </NavLink>
           </nav>
 
-          {/* Seção de dados no rodapé da sidebar */}
+          {/* Seção de dados e tema no rodapé da sidebar */}
           <div className="sidebar-footer">
+            {/* Botão de Alternar Modo Noturno */}
+            <button className="theme-toggle-btn" onClick={toggleTheme} title="Alternar tema claro/escuro">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {theme === 'dark' ? <Moon size={16} style={{ color: '#60a5fa' }} /> : <Sun size={16} style={{ color: '#eab308' }} />}
+                <span>{theme === 'dark' ? 'Modo Noturno' : 'Modo Claro'}</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', background: 'var(--border)', color: 'var(--text-muted)' }}>
+                {theme === 'dark' ? '🌙' : '☀️'}
+              </span>
+            </button>
+
             <p className="sidebar-footer-title">Seus Dados</p>
             <button className="sidebar-action-btn" onClick={handleExport}>
               <Download size={15} /> Exportar Backup
