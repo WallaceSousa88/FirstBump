@@ -1033,3 +1033,141 @@ input, textarea {
   color: white;
   border-color: var(--accent);
 }
+
+/* ── Baby Names Generator & Favorites ───────────────────────────────────────── */
+.names-generator-card {
+  background: linear-gradient(135deg, #fdf4ff 0%, #f0fdf4 50%, #eff6ff 100%);
+  border: 1px solid #f0abfc;
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .names-generator-card {
+  background: linear-gradient(135deg, #2e1065 0%, #064e3b 50%, #1e1b4b 100%);
+  border-color: #701a75;
+}
+
+.generator-result-box {
+  background: var(--surface);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  max-width: 520px;
+  margin: 20px auto 0;
+  box-shadow: var(--shadow-md);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.alphabet-filter-bar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.alphabet-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.alphabet-btn:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+
+.alphabet-btn-active {
+  background: var(--accent);
+  color: white !important;
+}
+
+.names-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.name-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.name-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.fav-heart-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fav-heart-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.fav-heart-active {
+  color: #ef4444 !important;
+}
+
+.rating-stars-row {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.rating-star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: #d1d5db;
+  transition: color 0.15s;
+}
+
+.rating-star-active {
+  color: #eab308 !important;
+}

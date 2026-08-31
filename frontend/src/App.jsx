@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Home, ListChecks, BookOpen, CalendarHeart, Library, Timer, Download, Upload, Sun, Moon } from 'lucide-react';
+import { Home, ListChecks, BookOpen, CalendarHeart, Library, Timer, Scale, Sparkles, Download, Upload, Sun, Moon } from 'lucide-react';
 import { storage } from './services/storage';
 import Dashboard from './pages/Dashboard';
 import Checklists from './pages/Checklists';
@@ -8,6 +8,8 @@ import Diary from './pages/Diary';
 import Agenda from './pages/Agenda';
 import Guides from './pages/Guides';
 import Contractions from './pages/Contractions';
+import WeightTracker from './pages/WeightTracker';
+import BabyNames from './pages/BabyNames';
 
 function App() {
   const importRef = useRef(null);
@@ -65,6 +67,12 @@ function App() {
             <NavLink to="/agenda" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
               <CalendarHeart size={20} /> Agenda
             </NavLink>
+            <NavLink to="/weight" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <Scale size={20} /> Curva de Peso
+            </NavLink>
+            <NavLink to="/names" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+              <Sparkles size={20} /> Nomes de Bebê
+            </NavLink>
             <NavLink to="/contractions" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
               <Timer size={20} /> Contrações
             </NavLink>
@@ -112,6 +120,8 @@ function App() {
             <Route path="/checklists" element={<Checklists />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/agenda" element={<Agenda />} />
+            <Route path="/weight" element={<WeightTracker />} />
+            <Route path="/names" element={<BabyNames />} />
             <Route path="/contractions" element={<Contractions />} />
             <Route path="/guides" element={<Guides />} />
           </Routes>

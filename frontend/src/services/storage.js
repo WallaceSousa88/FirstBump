@@ -4,6 +4,9 @@ const KEYS = {
   agenda: 'firstbump_agenda',
   settings: 'firstbump_settings',
   contractions: 'firstbump_contractions',
+  weights: 'firstbump_weights',
+  favoriteNames: 'firstbump_favorite_names',
+  customNames: 'firstbump_custom_names',
 };
 
 function generateId() {
@@ -104,6 +107,80 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Weight Tracking ──────────────────────────────────────────────────────────
+  getWeights: () => {
+    const items = getAll(KEYS.weights);
+    return items.sort((a, b) => new Date(b.date) - new Date(a.date));
+  },
+  createWeight: (data) => {
+    const items = getAll(KEYS.weights);
+    const newItem = { ...data, id: generateId() };
+    items.push(newItem);
+    saveAll(KEYS.weights, items);
+    return newItem;
+  },
+  deleteWeight: (id) => {
+    const items = getAll(KEYS.weights).filter(i => i.id !== id);
+    saveAll(KEYS.weights, items);
+    return { ok: true };
+  },
+
+  // ── Baby Names Favorites & Custom Names ──────────────────────────────────────
+  getFavoriteNames: () => {
+    const items = getAll(KEYS.favoriteNames);
+    return items.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  },
+  toggleFavoriteName: (nameItem) => {
+    const items = getAll(KEYS.favoriteNames);
+    const existingIndex = items.findIndex((i) => i.name.toLowerCase() === nameItem.name.toLowerCase());
+    if (existingIndex !== -1) {
+      items.splice(existingIndex, 1);
+      saveAll(KEYS.favoriteNames, items);
+      return { favorited: false };
+    } else {
+      const newItem = {
+        ...nameItem,
+        id: nameItem.id || generateId(),
+        rating: nameItem.rating || 5,
+        notes: nameItem.notes || '',
+        favoritedAt: new Date().toISOString(),
+      };
+      items.push(newItem);
+      saveAll(KEYS.favoriteNames, items);
+      return { favorited: true, item: newItem };
+    }
+  },
+  updateFavoriteName: (nameStr, data) => {
+    const items = getAll(KEYS.favoriteNames);
+    const idx = items.findIndex((i) => i.name.toLowerCase() === nameStr.toLowerCase());
+    if (idx !== -1) {
+      items[idx] = { ...items[idx], ...data };
+      saveAll(KEYS.favoriteNames, items);
+      return items[idx];
+    }
+    return null;
+  },
+  removeFavoriteName: (nameStr) => {
+    const items = getAll(KEYS.favoriteNames).filter((i) => i.name.toLowerCase() !== nameStr.toLowerCase());
+    saveAll(KEYS.favoriteNames, items);
+    return { ok: true };
+  },
+  getCustomNames: () => {
+    return getAll(KEYS.customNames);
+  },
+  createCustomName: (data) => {
+    const items = getAll(KEYS.customNames);
+    const newItem = { ...data, id: generateId(), isCustom: true };
+    items.push(newItem);
+    saveAll(KEYS.customNames, items);
+    return newItem;
+  },
+  deleteCustomName: (id) => {
+    const items = getAll(KEYS.customNames).filter((i) => i.id !== id);
+    saveAll(KEYS.customNames, items);
+    return { ok: true };
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -125,6 +202,9 @@ export const storage = {
       diary: getAll(KEYS.diary),
       agenda: getAll(KEYS.agenda),
       contractions: getAll(KEYS.contractions),
+      weights: getAll(KEYS.weights),
+      favoriteNames: getAll(KEYS.favoriteNames),
+      customNames: getAll(KEYS.customNames),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -147,6 +227,9 @@ export const storage = {
           if (data.diary)         saveAll(KEYS.diary, data.diary);
           if (data.agenda)        saveAll(KEYS.agenda, data.agenda);
           if (data.contractions)  saveAll(KEYS.contractions, data.contractions);
+          if (data.weights)       saveAll(KEYS.weights, data.weights);
+          if (data.favoriteNames) saveAll(KEYS.favoriteNames, data.favoriteNames);
+          if (data.customNames)   saveAll(KEYS.customNames, data.customNames);
           if (data.settings)      localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {
