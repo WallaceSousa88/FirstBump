@@ -1171,3 +1171,119 @@ input, textarea {
 .rating-star-active {
   color: #eab308 !important;
 }
+
+/* ── Mobile Responsive & PWA Layout ─────────────────────────────────────────── */
+.mobile-topbar {
+  display: none;
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .sidebar.mobile-open {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 82%;
+    max-width: 300px;
+    z-index: 1001;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideInLeft 0.25s ease-out;
+  }
+
+  @keyframes slideInLeft {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
+  }
+
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .main-content {
+    padding: 18px 14px 90px;
+    max-width: 100%;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 4px 6px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all 0.15s;
+    flex: 1;
+    text-align: center;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    padding: 18px 16px;
+    margin-bottom: 16px;
+  }
+}
+

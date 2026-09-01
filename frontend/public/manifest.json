@@ -1,0 +1,26 @@
+{
+  "name": "FirstBump - Diário & Acompanhamento da Gravidez",
+  "short_name": "FirstBump",
+  "description": "Seu companheiro completo para o acompanhamento da gravidez, cronômetro de contrações, malas de maternidade, fotos e checklists.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "categories": ["health", "lifestyle", "parenting"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
