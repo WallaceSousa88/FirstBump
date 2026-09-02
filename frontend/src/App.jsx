@@ -9,6 +9,7 @@ import {
   Timer,
   Scale,
   Sparkles,
+  ScrollText,
   Download,
   Upload,
   Sun,
@@ -29,6 +30,7 @@ import Guides from './pages/Guides';
 import Contractions from './pages/Contractions';
 import WeightTracker from './pages/WeightTracker';
 import BabyNames from './pages/BabyNames';
+import BirthPlan from './pages/BirthPlan';
 
 function AppContent() {
   const importRef = useRef(null);
@@ -190,6 +192,9 @@ function AppContent() {
           <NavLink to="/names" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Sparkles size={20} /> Nomes de Bebê
           </NavLink>
+          <NavLink to="/birth-plan" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <ScrollText size={20} /> Plano de Parto
+          </NavLink>
           <NavLink to="/contractions" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Timer size={20} /> Contrações
           </NavLink>
@@ -251,6 +256,7 @@ function AppContent() {
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/weight" element={<WeightTracker />} />
           <Route path="/names" element={<BabyNames />} />
+          <Route path="/birth-plan" element={<BirthPlan />} />
           <Route path="/contractions" element={<Contractions />} />
           <Route path="/guides" element={<Guides />} />
         </Routes>

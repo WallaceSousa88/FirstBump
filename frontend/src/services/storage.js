@@ -7,6 +7,7 @@ const KEYS = {
   weights: 'firstbump_weights',
   favoriteNames: 'firstbump_favorite_names',
   customNames: 'firstbump_custom_names',
+  birthPlan: 'firstbump_birth_plan',
 };
 
 function generateId() {
@@ -181,6 +182,16 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Birth Plan (Plano de Parto) ──────────────────────────────────────────────
+  getBirthPlan: () => {
+    const data = localStorage.getItem(KEYS.birthPlan);
+    return data ? JSON.parse(data) : null;
+  },
+  saveBirthPlan: (data) => {
+    localStorage.setItem(KEYS.birthPlan, JSON.stringify(data));
+    return data;
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -205,6 +216,7 @@ export const storage = {
       weights: getAll(KEYS.weights),
       favoriteNames: getAll(KEYS.favoriteNames),
       customNames: getAll(KEYS.customNames),
+      birthPlan: JSON.parse(localStorage.getItem(KEYS.birthPlan) || 'null'),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -230,6 +242,7 @@ export const storage = {
           if (data.weights)       saveAll(KEYS.weights, data.weights);
           if (data.favoriteNames) saveAll(KEYS.favoriteNames, data.favoriteNames);
           if (data.customNames)   saveAll(KEYS.customNames, data.customNames);
+          if (data.birthPlan)     localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
           if (data.settings)      localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {
