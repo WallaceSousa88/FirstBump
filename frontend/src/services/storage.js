@@ -8,6 +8,7 @@ const KEYS = {
   favoriteNames: 'firstbump_favorite_names',
   customNames: 'firstbump_custom_names',
   birthPlan: 'firstbump_birth_plan',
+  kickSessions: 'firstbump_kick_sessions',
 };
 
 function generateId() {
@@ -192,6 +193,28 @@ export const storage = {
     return data;
   },
 
+  // ── Kick Counter (Contador de Chutes / Movimentos Fetais) ─────────────────────
+  getKickSessions: () => {
+    const items = getAll(KEYS.kickSessions);
+    return items.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+  },
+  createKickSession: (data) => {
+    const items = getAll(KEYS.kickSessions);
+    const newItem = { ...data, id: generateId() };
+    items.push(newItem);
+    saveAll(KEYS.kickSessions, items);
+    return newItem;
+  },
+  deleteKickSession: (id) => {
+    const items = getAll(KEYS.kickSessions).filter((i) => i.id !== id);
+    saveAll(KEYS.kickSessions, items);
+    return { ok: true };
+  },
+  clearKickSessions: () => {
+    saveAll(KEYS.kickSessions, []);
+    return { ok: true };
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -217,6 +240,7 @@ export const storage = {
       favoriteNames: getAll(KEYS.favoriteNames),
       customNames: getAll(KEYS.customNames),
       birthPlan: JSON.parse(localStorage.getItem(KEYS.birthPlan) || 'null'),
+      kickSessions: getAll(KEYS.kickSessions),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -243,6 +267,7 @@ export const storage = {
           if (data.favoriteNames) saveAll(KEYS.favoriteNames, data.favoriteNames);
           if (data.customNames)   saveAll(KEYS.customNames, data.customNames);
           if (data.birthPlan)     localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
+          if (data.kickSessions)  saveAll(KEYS.kickSessions, data.kickSessions);
           if (data.settings)      localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {

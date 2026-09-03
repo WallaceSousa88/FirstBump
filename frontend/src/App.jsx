@@ -10,6 +10,7 @@ import {
   Scale,
   Sparkles,
   ScrollText,
+  Footprints,
   Download,
   Upload,
   Sun,
@@ -31,6 +32,7 @@ import Contractions from './pages/Contractions';
 import WeightTracker from './pages/WeightTracker';
 import BabyNames from './pages/BabyNames';
 import BirthPlan from './pages/BirthPlan';
+import KickCounter from './pages/KickCounter';
 
 function AppContent() {
   const importRef = useRef(null);
@@ -195,6 +197,9 @@ function AppContent() {
           <NavLink to="/birth-plan" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <ScrollText size={20} /> Plano de Parto
           </NavLink>
+          <NavLink to="/kicks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Footprints size={20} /> Contador de Chutes
+          </NavLink>
           <NavLink to="/contractions" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Timer size={20} /> Contrações
           </NavLink>
@@ -257,6 +262,7 @@ function AppContent() {
           <Route path="/weight" element={<WeightTracker />} />
           <Route path="/names" element={<BabyNames />} />
           <Route path="/birth-plan" element={<BirthPlan />} />
+          <Route path="/kicks" element={<KickCounter />} />
           <Route path="/contractions" element={<Contractions />} />
           <Route path="/guides" element={<Guides />} />
         </Routes>
