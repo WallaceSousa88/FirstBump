@@ -11,6 +11,7 @@ import {
   Sparkles,
   ScrollText,
   Footprints,
+  Calculator,
   Download,
   Upload,
   Sun,
@@ -33,6 +34,7 @@ import WeightTracker from './pages/WeightTracker';
 import BabyNames from './pages/BabyNames';
 import BirthPlan from './pages/BirthPlan';
 import KickCounter from './pages/KickCounter';
+import DiaperBudget from './pages/DiaperBudget';
 
 function AppContent() {
   const importRef = useRef(null);
@@ -200,6 +202,9 @@ function AppContent() {
           <NavLink to="/kicks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Footprints size={20} /> Contador de Chutes
           </NavLink>
+          <NavLink to="/calculator" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Calculator size={20} /> Fraldas & Orçamento
+          </NavLink>
           <NavLink to="/contractions" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Timer size={20} /> Contrações
           </NavLink>
@@ -263,6 +268,7 @@ function AppContent() {
           <Route path="/names" element={<BabyNames />} />
           <Route path="/birth-plan" element={<BirthPlan />} />
           <Route path="/kicks" element={<KickCounter />} />
+          <Route path="/calculator" element={<DiaperBudget />} />
           <Route path="/contractions" element={<Contractions />} />
           <Route path="/guides" element={<Guides />} />
         </Routes>

@@ -9,6 +9,8 @@ const KEYS = {
   customNames: 'firstbump_custom_names',
   birthPlan: 'firstbump_birth_plan',
   kickSessions: 'firstbump_kick_sessions',
+  diaperInventory: 'firstbump_diaper_inventory',
+  budgetItems: 'firstbump_budget_items',
 };
 
 function generateId() {
@@ -215,6 +217,44 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Diaper Inventory & Calculator ────────────────────────────────────────────
+  getDiaperInventory: () => {
+    const data = localStorage.getItem(KEYS.diaperInventory);
+    return data ? JSON.parse(data) : { RN: 0, P: 0, M: 0, G: 0, GG: 0 };
+  },
+  saveDiaperInventory: (data) => {
+    localStorage.setItem(KEYS.diaperInventory, JSON.stringify(data));
+    return data;
+  },
+
+  // ── Layette Budget (Orçamento do Enxoval) ─────────────────────────────────────
+  getBudgetItems: () => {
+    const items = getAll(KEYS.budgetItems);
+    return items.sort((a, b) => (b.id || 0) - (a.id || 0));
+  },
+  createBudgetItem: (data) => {
+    const items = getAll(KEYS.budgetItems);
+    const newItem = { ...data, id: generateId() };
+    items.push(newItem);
+    saveAll(KEYS.budgetItems, items);
+    return newItem;
+  },
+  updateBudgetItem: (id, data) => {
+    const items = getAll(KEYS.budgetItems);
+    const idx = items.findIndex((i) => i.id === id);
+    if (idx !== -1) {
+      items[idx] = { ...items[idx], ...data };
+      saveAll(KEYS.budgetItems, items);
+      return items[idx];
+    }
+    return null;
+  },
+  deleteBudgetItem: (id) => {
+    const items = getAll(KEYS.budgetItems).filter((i) => i.id !== id);
+    saveAll(KEYS.budgetItems, items);
+    return { ok: true };
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -241,6 +281,8 @@ export const storage = {
       customNames: getAll(KEYS.customNames),
       birthPlan: JSON.parse(localStorage.getItem(KEYS.birthPlan) || 'null'),
       kickSessions: getAll(KEYS.kickSessions),
+      diaperInventory: JSON.parse(localStorage.getItem(KEYS.diaperInventory) || 'null'),
+      budgetItems: getAll(KEYS.budgetItems),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -259,16 +301,18 @@ export const storage = {
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.checklists)    saveAll(KEYS.checklists, data.checklists);
-          if (data.diary)         saveAll(KEYS.diary, data.diary);
-          if (data.agenda)        saveAll(KEYS.agenda, data.agenda);
-          if (data.contractions)  saveAll(KEYS.contractions, data.contractions);
-          if (data.weights)       saveAll(KEYS.weights, data.weights);
-          if (data.favoriteNames) saveAll(KEYS.favoriteNames, data.favoriteNames);
-          if (data.customNames)   saveAll(KEYS.customNames, data.customNames);
-          if (data.birthPlan)     localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
-          if (data.kickSessions)  saveAll(KEYS.kickSessions, data.kickSessions);
-          if (data.settings)      localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
+          if (data.checklists)      saveAll(KEYS.checklists, data.checklists);
+          if (data.diary)           saveAll(KEYS.diary, data.diary);
+          if (data.agenda)          saveAll(KEYS.agenda, data.agenda);
+          if (data.contractions)    saveAll(KEYS.contractions, data.contractions);
+          if (data.weights)         saveAll(KEYS.weights, data.weights);
+          if (data.favoriteNames)   saveAll(KEYS.favoriteNames, data.favoriteNames);
+          if (data.customNames)     saveAll(KEYS.customNames, data.customNames);
+          if (data.birthPlan)       localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
+          if (data.kickSessions)    saveAll(KEYS.kickSessions, data.kickSessions);
+          if (data.diaperInventory) localStorage.setItem(KEYS.diaperInventory, JSON.stringify(data.diaperInventory));
+          if (data.budgetItems)     saveAll(KEYS.budgetItems, data.budgetItems);
+          if (data.settings)        localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {
           reject(new Error('Arquivo inválido. Certifique-se de importar um backup do FirstBump.'));
