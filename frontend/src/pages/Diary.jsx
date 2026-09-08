@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Trash2, ImagePlus, X, ZoomIn, Sparkles, Images, BookOpen } from 'lucide-react';
+import { Trash2, ImagePlus, X, ZoomIn, Sparkles, Images, BookOpen, Printer } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 import { storage } from '../services/storage';
 import { compressImage } from '../utils/imageCompressor';
 
@@ -63,8 +64,8 @@ export default function Diary() {
       title: title.trim(),
       content: content.trim(),
       date,
-      image: image || null,
-      photoTag: image ? photoTag : null,
+      image,
+      tag: photoTag,
     });
 
     setTitle('');
@@ -74,20 +75,30 @@ export default function Diary() {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta recordação?')) {
-      storage.deleteDiaryEntry(id);
-      refresh();
-    }
+    storage.deleteDiaryEntry(id);
+    refresh();
   };
 
   const entriesWithPhotos = entries.filter((e) => e.image);
 
   return (
     <div>
-      <h1 className="page-title">Diário de Evolução</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-        Guarde memórias, sentimentos e acompanhe a evolução da sua gestação com fotos e ultrassons.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+        <div>
+          <h1 className="page-title" style={{ marginBottom: '6px' }}>Diário de Evolução</h1>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+            Guarde memórias, sentimentos e acompanhe a evolução da sua gestação com fotos e ultrassons.
+          </p>
+        </div>
+
+        <NavLink
+          to="/memory-book"
+          className="btn btn-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+        >
+          <Printer size={16} /> Livro de Memórias (Imprimir/PDF)
+        </NavLink>
+      </div>
 
       {/* Formulário de Novo Registro */}
       <div className="card">

@@ -1567,5 +1567,126 @@ input, textarea {
   color: #f59e0b;
 }
 
+/* ── Baby Memory Book (Livro de Memórias do Bebê) ────────────────────────────── */
+.memory-book-sheet {
+  background: white;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  max-width: 820px;
+  margin: 0 auto;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+[data-theme="dark"] .memory-book-sheet {
+  background: #0f172a;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+.book-cover {
+  text-align: center;
+  padding: 60px 20px 40px;
+  border: 4px double #cbd5e1;
+  border-radius: var(--radius-lg);
+  margin-bottom: 40px;
+  background: linear-gradient(135deg, #fdf4ff 0%, #f0fdf4 50%, #eff6ff 100%);
+  position: relative;
+}
+
+[data-theme="dark"] .book-cover {
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  border-color: #4338ca;
+}
+
+.book-dedication-box {
+  background: #f8fafc;
+  border-left: 4px solid var(--accent);
+  padding: 20px 24px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 36px;
+  font-style: italic;
+}
+
+[data-theme="dark"] .book-dedication-box {
+  background: #1e293b;
+}
+
+.book-memory-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .book-memory-item {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.book-photo-frame {
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 14px 0;
+  max-height: 400px;
+  display: flex;
+  justify-content: center;
+  background: #000000;
+}
+
+.book-photo-frame img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Regras de Quebra de Página na Impressão */
+@media print {
+  .memory-book-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .book-cover {
+    background: white !important;
+    border: 2px solid #000000 !important;
+    padding: 100px 20px 80px !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .book-dedication-box {
+    background: #f8fafc !important;
+    color: black !important;
+    border-left: 4px solid #000000 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .book-memory-item {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 30px !important;
+  }
+
+  .book-photo-frame {
+    background: white !important;
+  }
+}
+
+
 
 

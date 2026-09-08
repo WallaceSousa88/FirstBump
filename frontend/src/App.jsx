@@ -35,6 +35,7 @@ import BabyNames from './pages/BabyNames';
 import BirthPlan from './pages/BirthPlan';
 import KickCounter from './pages/KickCounter';
 import DiaperBudget from './pages/DiaperBudget';
+import MemoryBook from './pages/MemoryBook';
 
 function AppContent() {
   const importRef = useRef(null);
@@ -263,6 +264,7 @@ function AppContent() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/checklists" element={<Checklists />} />
           <Route path="/diary" element={<Diary />} />
+          <Route path="/memory-book" element={<MemoryBook />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/weight" element={<WeightTracker />} />
           <Route path="/names" element={<BabyNames />} />
