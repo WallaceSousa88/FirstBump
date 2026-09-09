@@ -37,6 +37,14 @@ import KickCounter from './pages/KickCounter';
 import DiaperBudget from './pages/DiaperBudget';
 import MemoryBook from './pages/MemoryBook';
 
+const COLOR_THEMES = [
+  { key: 'ocean', label: 'Azul Sereno', emoji: '🌊', color: '#2563eb' },
+  { key: 'blush', label: 'Rosa Blush', emoji: '🌸', color: '#db2777' },
+  { key: 'sage', label: 'Verde Sálvia', emoji: '🌿', color: '#16a34a' },
+  { key: 'lavender', label: 'Lavanda', emoji: '💜', color: '#7c3aed' },
+  { key: 'honey', label: 'Caramelo & Mel', emoji: '🍯', color: '#d97706' },
+];
+
 function AppContent() {
   const importRef = useRef(null);
   const location = useLocation();
@@ -45,6 +53,11 @@ function AppContent() {
     const saved = storage.getSetting('theme');
     if (saved && saved.value) return saved.value;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  const [colorTheme, setColorTheme] = useState(() => {
+    const saved = storage.getSetting('color_theme');
+    return saved && saved.value ? saved.value : 'ocean';
   });
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -61,6 +74,11 @@ function AppContent() {
     document.documentElement.setAttribute('data-theme', theme);
     storage.setSetting('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-color-theme', colorTheme);
+    storage.setSetting('color_theme', colorTheme);
+  }, [colorTheme]);
 
   // Listener para instalação do PWA
   useEffect(() => {
@@ -237,6 +255,29 @@ function AppContent() {
               {theme === 'dark' ? '🌙' : '☀️'}
             </span>
           </button>
+
+          {/* Seletor de Paleta de Cores (Accent Theme) */}
+          <div style={{ marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span className="sidebar-footer-title" style={{ margin: 0 }}>Cor de Destaque</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 600 }}>
+                {COLOR_THEMES.find((t) => t.key === colorTheme)?.label}
+              </span>
+            </div>
+            <div className="color-theme-picker">
+              {COLOR_THEMES.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setColorTheme(t.key)}
+                  className={`color-dot-btn ${colorTheme === t.key ? 'active' : ''}`}
+                  style={{ backgroundColor: t.color }}
+                  title={`${t.label} ${t.emoji}`}
+                >
+                  {colorTheme === t.key && <span style={{ color: '#ffffff', fontSize: '0.65rem' }}>✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <p className="sidebar-footer-title">Seus Dados (Backup)</p>
           <button className="sidebar-action-btn" onClick={handleExport}>
