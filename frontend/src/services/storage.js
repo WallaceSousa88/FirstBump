@@ -11,6 +11,7 @@ const KEYS = {
   kickSessions: 'firstbump_kick_sessions',
   diaperInventory: 'firstbump_diaper_inventory',
   budgetItems: 'firstbump_budget_items',
+  medicalInfo: 'firstbump_medical_info',
 };
 
 function generateId() {
@@ -255,6 +256,16 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Medical Summary (Ficha Médica da Gestante) ────────────────────────────────
+  getMedicalInfo: () => {
+    const data = localStorage.getItem(KEYS.medicalInfo);
+    return data ? JSON.parse(data) : null;
+  },
+  saveMedicalInfo: (data) => {
+    localStorage.setItem(KEYS.medicalInfo, JSON.stringify(data));
+    return data;
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -283,6 +294,7 @@ export const storage = {
       kickSessions: getAll(KEYS.kickSessions),
       diaperInventory: JSON.parse(localStorage.getItem(KEYS.diaperInventory) || 'null'),
       budgetItems: getAll(KEYS.budgetItems),
+      medicalInfo: JSON.parse(localStorage.getItem(KEYS.medicalInfo) || 'null'),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -312,6 +324,7 @@ export const storage = {
           if (data.kickSessions)    saveAll(KEYS.kickSessions, data.kickSessions);
           if (data.diaperInventory) localStorage.setItem(KEYS.diaperInventory, JSON.stringify(data.diaperInventory));
           if (data.budgetItems)     saveAll(KEYS.budgetItems, data.budgetItems);
+          if (data.medicalInfo)     localStorage.setItem(KEYS.medicalInfo, JSON.stringify(data.medicalInfo));
           if (data.settings)        localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {

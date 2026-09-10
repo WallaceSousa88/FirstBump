@@ -1785,6 +1785,154 @@ input, textarea {
   }
 }
 
+/* ── Medical Summary (Ficha Médica para o Obstetra) ────────────────────────── */
+.medical-summary-sheet {
+  background: white;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  max-width: 840px;
+  margin: 0 auto 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .medical-summary-sheet {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+.medical-header-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.medical-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
+}
+
+[data-theme="dark"] .medical-section-title {
+  border-color: #334155;
+}
+
+.medical-grid-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.medical-stat-cell {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+[data-theme="dark"] .medical-stat-cell {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.medical-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .medical-stat-label {
+  color: #94a3b8;
+}
+
+.medical-stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .medical-stat-value {
+  color: #f8fafc;
+}
+
+.medical-vaccine-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.vaccine-done {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.vaccine-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Impressão em 1 Página A4 */
+@media print {
+  .medical-summary-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .medical-header-banner {
+    border-color: #000000 !important;
+  }
+
+  .medical-section-title {
+    color: #000000 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .medical-stat-cell {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: black !important;
+  }
+
+  .medical-stat-value {
+    color: black !important;
+  }
+}
+
+
 
 
 
