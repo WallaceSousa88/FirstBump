@@ -12,6 +12,7 @@ import {
   ScrollText,
   Footprints,
   Calculator,
+  Stethoscope,
   Download,
   Upload,
   Sun,
@@ -36,6 +37,7 @@ import BirthPlan from './pages/BirthPlan';
 import KickCounter from './pages/KickCounter';
 import DiaperBudget from './pages/DiaperBudget';
 import MemoryBook from './pages/MemoryBook';
+import MedicalSummary from './pages/MedicalSummary';
 
 const COLOR_THEMES = [
   { key: 'ocean', label: 'Azul Sereno', emoji: '🌊', color: '#2563eb' },
@@ -215,6 +217,9 @@ function AppContent() {
           <NavLink to="/names" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Sparkles size={20} /> Nomes de Bebê
           </NavLink>
+          <NavLink to="/medical-summary" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Stethoscope size={20} /> Ficha Médica
+          </NavLink>
           <NavLink to="/birth-plan" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <ScrollText size={20} /> Plano de Parto
           </NavLink>
@@ -309,6 +314,7 @@ function AppContent() {
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/weight" element={<WeightTracker />} />
           <Route path="/names" element={<BabyNames />} />
+          <Route path="/medical-summary" element={<MedicalSummary />} />
           <Route path="/birth-plan" element={<BirthPlan />} />
           <Route path="/kicks" element={<KickCounter />} />
           <Route path="/calculator" element={<DiaperBudget />} />

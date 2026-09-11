@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Stethoscope, Printer, Edit3, CheckCircle2, AlertCircle, Calendar, Scale, Footprints, Syringe, HelpCircle, Plus, Trash2, HeartPulse, User } from 'lucide-react';
 import { storage } from '../services/storage';
-import { calculateBMI, getBMICategory } from '../data/gestationalWeight';
+import { calculateBMI, getBMICategoryKey, BMI_CATEGORIES } from '../utils/gestationalWeight';
 
 export default function MedicalSummary() {
   const [medicalInfo, setMedicalInfo] = useState(() => {
@@ -55,7 +55,8 @@ export default function MedicalSummary() {
   const currentWeight = weights.length > 0 ? parseFloat(weights[0].weight) : preWeight;
   const totalWeightGain = currentWeight - preWeight;
   const initialBMI = calculateBMI(preWeight, motherHeight);
-  const bmiCategory = getBMICategory(initialBMI);
+  const categoryKey = getBMICategoryKey(initialBMI);
+  const bmiCategory = BMI_CATEGORIES[categoryKey] || BMI_CATEGORIES.peso_normal;
 
   // Idade Gestacional baseada na DPP ou DUM
   const gestCalc = useMemo(() => {
@@ -366,7 +367,7 @@ export default function MedicalSummary() {
           </div>
           <div className="medical-stat-cell">
             <div className="medical-stat-label">Ganho Recomendado (Total)</div>
-            <div className="medical-stat-value">{bmiCategory.recommendedGain}</div>
+            <div className="medical-stat-value">{bmiCategory.totalGainMin} a {bmiCategory.totalGainMax} kg</div>
           </div>
         </div>
 
