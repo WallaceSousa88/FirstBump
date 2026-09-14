@@ -7,6 +7,7 @@ const KEYS = {
   weights: 'firstbump_weights',
   favoriteNames: 'firstbump_favorite_names',
   customNames: 'firstbump_custom_names',
+  nameCombos: 'firstbump_name_combos',
   birthPlan: 'firstbump_birth_plan',
   kickSessions: 'firstbump_kick_sessions',
   diaperInventory: 'firstbump_diaper_inventory',
@@ -186,6 +187,24 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Name Combos (Testador de Nome Completo com Sobrenome) ─────────────────────
+  getNameCombos: () => {
+    const items = getAll(KEYS.nameCombos);
+    return items.sort((a, b) => (b.id || 0) - (a.id || 0));
+  },
+  createNameCombo: (data) => {
+    const items = getAll(KEYS.nameCombos);
+    const newItem = { ...data, id: generateId() };
+    items.push(newItem);
+    saveAll(KEYS.nameCombos, items);
+    return newItem;
+  },
+  deleteNameCombo: (id) => {
+    const items = getAll(KEYS.nameCombos).filter((i) => i.id !== id);
+    saveAll(KEYS.nameCombos, items);
+    return { ok: true };
+  },
+
   // ── Birth Plan (Plano de Parto) ──────────────────────────────────────────────
   getBirthPlan: () => {
     const data = localStorage.getItem(KEYS.birthPlan);
@@ -290,6 +309,7 @@ export const storage = {
       weights: getAll(KEYS.weights),
       favoriteNames: getAll(KEYS.favoriteNames),
       customNames: getAll(KEYS.customNames),
+      nameCombos: getAll(KEYS.nameCombos),
       birthPlan: JSON.parse(localStorage.getItem(KEYS.birthPlan) || 'null'),
       kickSessions: getAll(KEYS.kickSessions),
       diaperInventory: JSON.parse(localStorage.getItem(KEYS.diaperInventory) || 'null'),
@@ -320,6 +340,7 @@ export const storage = {
           if (data.weights)         saveAll(KEYS.weights, data.weights);
           if (data.favoriteNames)   saveAll(KEYS.favoriteNames, data.favoriteNames);
           if (data.customNames)     saveAll(KEYS.customNames, data.customNames);
+          if (data.nameCombos)      saveAll(KEYS.nameCombos, data.nameCombos);
           if (data.birthPlan)       localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
           if (data.kickSessions)    saveAll(KEYS.kickSessions, data.kickSessions);
           if (data.diaperInventory) localStorage.setItem(KEYS.diaperInventory, JSON.stringify(data.diaperInventory));
