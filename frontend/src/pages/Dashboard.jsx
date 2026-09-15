@@ -1,13 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { storage } from '../services/storage';
 import { getBabySize } from '../data/babySizes';
-import { CalendarHeart, ListChecks, ChevronLeft, ChevronRight, Sparkles, Scale, Ruler, HeartHandshake, Timer } from 'lucide-react';
+import { CalendarHeart, ListChecks, ChevronLeft, ChevronRight, Sparkles, Scale, Ruler, Timer, Calendar, Edit3, X, CheckCircle2, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Helper para somar/subtrair dias em formato YYYY-MM-DD
+function addDays(dateStr, days) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr + 'T00:00:00');
+  if (isNaN(date.getTime())) return '';
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+}
+
+function formatDateBR(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 export default function Dashboard() {
-  const [dueDate, setDueDate] = useState('');
-  const [inputDate, setInputDate] = useState('');
+  const [dpp, setDpp] = useState('');
+  const [dum, setDum] = useState('');
+
+  // Formulário de Configuração / Edição
+  const [formDpp, setFormDpp] = useState('');
+  const [formDum, setFormDum] = useState('');
+  const [isEditingDates, setIsEditingDates] = useState(false);
+
   const [currentWeek, setCurrentWeek] = useState(1);
+  const [currentDays, setCurrentDays] = useState(0);
   const [viewedWeek, setViewedWeek] = useState(1);
   const [progress, setProgress] = useState(0);
   const [daysLeft, setDaysLeft] = useState(null);
@@ -15,10 +38,27 @@ export default function Dashboard() {
   const [pendingTasks, setPendingTasks] = useState([]);
 
   useEffect(() => {
-    const setting = storage.getSetting('due_date');
-    if (setting && setting.value) {
-      setDueDate(setting.value);
-      calculateWeeks(setting.value);
+    const savedDpp = storage.getSetting('dpp') || storage.getSetting('due_date');
+    const savedDum = storage.getSetting('dum');
+
+    let initialDpp = savedDpp?.value || '';
+    let initialDum = savedDum?.value || '';
+
+    // Se tiver apenas DUM, calcula a DPP
+    if (initialDum && !initialDpp) {
+      initialDpp = addDays(initialDum, 280);
+    }
+    // Se tiver apenas DPP, calcula a DUM
+    if (initialDpp && !initialDum) {
+      initialDum = addDays(initialDpp, -280);
+    }
+
+    if (initialDpp) {
+      setDpp(initialDpp);
+      setDum(initialDum);
+      setFormDpp(initialDpp);
+      setFormDum(initialDum);
+      calculateGestationalAge(initialDpp, initialDum);
     }
 
     const today = new Date().toISOString().split('T')[0];
@@ -29,29 +69,57 @@ export default function Dashboard() {
     setPendingTasks(checklists.filter((c) => !c.is_completed).slice(0, 3));
   }, []);
 
-  const calculateWeeks = (dateString) => {
-    const dpp = new Date(dateString);
-    const dum = new Date(dpp.getTime() - 280 * 24 * 60 * 60 * 1000);
+  // Cálculo da Idade Gestacional (Semanas + Dias) e Dias Restantes
+  const calculateGestationalAge = (targetDpp, targetDum) => {
+    const dppDate = new Date(targetDpp + 'T00:00:00');
+    const dumDate = targetDum ? new Date(targetDum + 'T00:00:00') : new Date(dppDate.getTime() - 280 * 24 * 60 * 60 * 1000);
     const now = new Date();
 
-    const diffDays = Math.floor((now - dum) / (1000 * 60 * 60 * 24));
-    let calculated = Math.max(1, Math.min(40, Math.floor(diffDays / 7) || 1));
+    const diffDays = Math.floor((now - dumDate) / (1000 * 60 * 60 * 24));
+    const calculatedWeek = Math.max(1, Math.min(40, Math.floor(diffDays / 7) || 1));
+    const calculatedDay = Math.max(0, Math.min(6, diffDays % 7));
 
-    // Dias restantes para a DPP
-    const diffToDpp = Math.ceil((dpp - now) / (1000 * 60 * 60 * 24));
+    // Dias restantes para o parto
+    const diffToDpp = Math.ceil((dppDate - now) / (1000 * 60 * 60 * 24));
     setDaysLeft(diffToDpp > 0 ? diffToDpp : 0);
 
-    setCurrentWeek(calculated);
-    setViewedWeek(calculated);
-    setProgress((calculated / 40) * 100);
+    setCurrentWeek(calculatedWeek);
+    setCurrentDays(calculatedDay);
+    setViewedWeek(calculatedWeek);
+    setProgress(Math.min(100, Math.max(0, (calculatedWeek / 40) * 100)));
   };
 
-  const handleSaveDate = (e) => {
+  // Preenchimento Automático: Usuário alterou a DUM
+  const handleDumChange = (val) => {
+    setFormDum(val);
+    if (val) {
+      const calculatedDpp = addDays(val, 280); // Regra de Naegele (+280 dias / 40 semanas)
+      setFormDpp(calculatedDpp);
+    }
+  };
+
+  // Preenchimento Automático: Usuário alterou a DPP
+  const handleDppChange = (val) => {
+    setFormDpp(val);
+    if (val) {
+      const calculatedDum = addDays(val, -280); // DUM = DPP - 280 dias
+      setFormDum(calculatedDum);
+    }
+  };
+
+  // Salvar Datas no storage
+  const handleSaveDates = (e) => {
     e.preventDefault();
-    if (!inputDate) return;
-    storage.setSetting('due_date', inputDate);
-    setDueDate(inputDate);
-    calculateWeeks(inputDate);
+    if (!formDpp) return;
+
+    storage.setSetting('dpp', formDpp);
+    storage.setSetting('due_date', formDpp);
+    if (formDum) storage.setSetting('dum', formDum);
+
+    setDpp(formDpp);
+    setDum(formDum);
+    calculateGestationalAge(formDpp, formDum);
+    setIsEditingDates(false);
   };
 
   const babyInfo = getBabySize(viewedWeek);
@@ -59,29 +127,94 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="page-title">Resumo da Gestação</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+        <h1 className="page-title" style={{ margin: 0 }}>Resumo da Gestação</h1>
 
-      {!dueDate ? (
-        <div className="card" style={{ backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }}>
-          <h2 className="card-title" style={{ color: '#1e3a8a' }}>Bem-vindo ao FirstBump! 👋</h2>
-          <p className="card-text" style={{ marginBottom: '16px', color: '#1e40af' }}>
-            Para personalizarmos o seu painel e mostrar o tamanho do seu bebê semana a semana, insira a <b>Data Prevista do Parto (DPP)</b> calculada pelo seu médico.
+        {dpp && (
+          <button
+            onClick={() => {
+              setFormDpp(dpp);
+              setFormDum(dum);
+              setIsEditingDates(true);
+            }}
+            className="btn"
+            style={{ border: '1px solid var(--border)', backgroundColor: 'var(--surface)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Edit3 size={15} /> Alterar DUM / DPP
+          </button>
+        )}
+      </div>
+
+      {/* Modal / Card de Configuração Inicial de Datas */}
+      {(!dpp || isEditingDates) && (
+        <div className="card" style={{ backgroundColor: 'var(--accent-soft)', borderColor: 'var(--accent)', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, fontSize: '1.1rem' }}>
+              <Calendar size={20} style={{ color: 'var(--accent)' }} />
+              <span>{dpp ? 'Atualizar Datas da Gestação' : 'Configuração Inicial da Gravidez 👋'}</span>
+            </div>
+
+            {dpp && (
+              <button className="btn-icon" onClick={() => setIsEditingDates(false)}>
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '16px', lineHeight: '1.5' }}>
+            Preencha a <b>DUM (Última Menstruação)</b> <u>ou</u> a <b>DPP (Data Prevista do Parto)</b>. Ao digitar uma, a outra é calculada <b>automaticamente pela Regra de Naegele (40 semanas)</b>!
           </p>
-          <form onSubmit={handleSaveDate} className="flex-row">
-            <input
-              type="date"
-              className="form-input"
-              style={{ maxWidth: '200px' }}
-              value={inputDate}
-              onChange={(e) => setInputDate(e.target.value)}
-              required
-            />
-            <button className="btn btn-primary" type="submit">
-              Salvar Data
-            </button>
+
+          <form onSubmit={handleSaveDates}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '16px' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>
+                  📅 DUM (Data da Última Menstruação)
+                </label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={formDum}
+                  onChange={(e) => handleDumChange(e.target.value)}
+                  placeholder="Primeiro dia do último ciclo"
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                  Calcula a DPP somando 280 dias
+                </span>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>
+                  👶 DPP (Data Prevista do Parto)
+                </label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={formDpp}
+                  onChange={(e) => handleDppChange(e.target.value)}
+                  required
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                  Calculada pelo médico ou ultrassom
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              {dpp && (
+                <button type="button" onClick={() => setIsEditingDates(false)} className="btn" style={{ border: '1px solid var(--border)' }}>
+                  Cancelar
+                </button>
+              )}
+              <button className="btn btn-primary" type="submit" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 size={16} /> Salvar Datas
+              </button>
+            </div>
           </form>
         </div>
-      ) : (
+      )}
+
+      {dpp && (
         <>
           {/* Card Principal: Comparador de Frutinhas e Desenvolvimento */}
           <div className="baby-size-hero">
@@ -121,6 +254,12 @@ export default function Dashboard() {
                         🎉 Faltam {daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}
                       </span>
                     )}
+
+                    {dum && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        DUM: <b>{formatDateBR(dum)}</b>
+                      </span>
+                    )}
                   </div>
 
                   <h2>
@@ -137,6 +276,12 @@ export default function Dashboard() {
                       <Scale size={14} style={{ color: '#16a34a' }} />
                       <span>Peso aprox: <b>{babyInfo.weight}</b></span>
                     </div>
+
+                    {!isBrowsingOtherWeek && (
+                      <div className="baby-metric-badge" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}>
+                        <span>Idade exata: <b>{currentWeek} sem + {currentDays}d</b></span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -196,32 +341,17 @@ export default function Dashboard() {
 
             {/* Barra de Progresso Geral da Gestação */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                <span>Progresso da Gestação</span>
-                <span><b>{Math.round(progress)}%</b> (DPP: {dueDate.split('-').reverse().join('/')})</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+                <span>Progresso da Gestação: <b>{Math.round(progress)}%</b></span>
+                <span>
+                  {dum ? `DUM: ${formatDateBR(dum)} · ` : ''}
+                  <b>DPP: {formatDateBR(dpp)}</b>
+                </span>
               </div>
 
               <div className="progress-container">
                 <div className="progress-bar" style={{ width: `${progress}%` }}></div>
               </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px' }}>
-              <button
-                onClick={() => {
-                  setDueDate('');
-                  storage.setSetting('due_date', '');
-                }}
-                style={{
-                  fontSize: '0.8rem',
-                  color: 'var(--text-muted)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                Alterar Data Prevista do Parto
-              </button>
             </div>
           </div>
 
@@ -277,7 +407,7 @@ export default function Dashboard() {
                 <div key={ev.id} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
                   <div style={{ fontWeight: 600 }}>{ev.title}</div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--accent)', marginTop: '4px' }}>
-                    {ev.date.split('-').reverse().join('/')} · {ev.type}
+                    {formatDateBR(ev.date)} · {ev.type}
                   </div>
                 </div>
               ))}
