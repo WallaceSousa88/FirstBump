@@ -1,7 +1,28 @@
 import { useEffect, useState, useMemo } from 'react';
 import { storage } from '../services/storage';
 import { getBabySize } from '../data/babySizes';
-import { CalendarHeart, ListChecks, ChevronLeft, ChevronRight, Sparkles, Scale, Ruler, Timer, Calendar, Edit3, X, CheckCircle2, Info } from 'lucide-react';
+import { DIAPER_SIZES } from '../data/diaperData';
+import {
+  CalendarHeart,
+  ListChecks,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Scale,
+  Ruler,
+  Timer,
+  Calendar,
+  Edit3,
+  X,
+  CheckCircle2,
+  Footprints,
+  Package,
+  Camera,
+  Stethoscope,
+  Heart,
+  BookOpen,
+  ArrowRight,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Helper para somar/subtrair dias em formato YYYY-MM-DD
@@ -37,6 +58,12 @@ export default function Dashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [pendingTasks, setPendingTasks] = useState([]);
 
+  // Métricas dos outros módulos para o Bento Grid
+  const [kickSessionsCount, setKickSessionsCount] = useState(0);
+  const [lastKickSession, setLastKickSession] = useState(null);
+  const [diaperStockPercentage, setDiaperStockPercentage] = useState(0);
+  const [weightGain, setWeightGain] = useState(null);
+
   useEffect(() => {
     const savedDpp = storage.getSetting('dpp') || storage.getSetting('due_date');
     const savedDum = storage.getSetting('dum');
@@ -67,6 +94,29 @@ export default function Dashboard() {
 
     const checklists = storage.getChecklists();
     setPendingTasks(checklists.filter((c) => !c.is_completed).slice(0, 3));
+
+    // Carrega dados de chutes
+    const kicks = storage.getKickSessions();
+    setKickSessionsCount(kicks.length);
+    if (kicks.length > 0) {
+      setLastKickSession(kicks[0]);
+    }
+
+    // Carrega dados de fraldas
+    const inventory = storage.getDiaperInventory();
+    const totalRecommendedPacks = DIAPER_SIZES.reduce((acc, d) => acc + d.recommendedPacks, 0);
+    const totalCurrentPacks = Object.values(inventory).reduce((acc, count) => acc + (count || 0), 0);
+    setDiaperStockPercentage(Math.min(100, Math.round((totalCurrentPacks / totalRecommendedPacks) * 100)));
+
+    // Carrega dados de peso
+    const weights = storage.getWeights();
+    const preWeightSetting = storage.getSetting('pre_weight');
+    if (weights.length > 0 && preWeightSetting?.value) {
+      const pre = parseFloat(preWeightSetting.value);
+      const current = parseFloat(weights[0].weight);
+      const diff = current - pre;
+      setWeightGain(diff >= 0 ? `+${diff.toFixed(1)} kg` : `${diff.toFixed(1)} kg`);
+    }
   }, []);
 
   // Cálculo da Idade Gestacional (Semanas + Dias) e Dias Restantes
@@ -127,8 +177,16 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>Resumo da Gestação</h1>
+      {/* Topo do Painel */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+        <div>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)' }}>
+            Seu Acompanhamento Gestacional
+          </span>
+          <h1 className="page-title" style={{ margin: '2px 0 0', fontSize: '1.9rem', fontWeight: 800 }}>
+            Olá, mamãe & papai! 👋
+          </h1>
+        </div>
 
         {dpp && (
           <button
@@ -138,20 +196,29 @@ export default function Dashboard() {
               setIsEditingDates(true);
             }}
             className="btn"
-            style={{ border: '1px solid var(--border)', backgroundColor: 'var(--surface)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{
+              border: '1px solid var(--border)',
+              backgroundColor: 'var(--surface)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: 'var(--shadow-sm)',
+            }}
           >
-            <Edit3 size={15} /> Alterar DUM / DPP
+            <Edit3 size={15} style={{ color: 'var(--accent)' }} /> Alterar DUM / DPP
           </button>
         )}
       </div>
 
       {/* Modal / Card de Configuração Inicial de Datas */}
       {(!dpp || isEditingDates) && (
-        <div className="card" style={{ backgroundColor: 'var(--accent-soft)', borderColor: 'var(--accent)', marginBottom: '24px' }}>
+        <div className="card" style={{ backgroundColor: 'var(--accent-soft)', borderColor: 'var(--accent)', marginBottom: '24px', boxShadow: 'var(--shadow-md)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, fontSize: '1.1rem' }}>
-              <Calendar size={20} style={{ color: 'var(--accent)' }} />
-              <span>{dpp ? 'Atualizar Datas da Gestação' : 'Configuração Inicial da Gravidez 👋'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 800, fontSize: '1.15rem' }}>
+              <Calendar size={22} style={{ color: 'var(--accent)' }} />
+              <span>{dpp ? 'Atualizar Datas da Gestação' : 'Configuração Inicial da Gravidez 🌸'}</span>
             </div>
 
             {dpp && (
@@ -206,7 +273,7 @@ export default function Dashboard() {
                   Cancelar
                 </button>
               )}
-              <button className="btn btn-primary" type="submit" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button className="btn btn-primary" type="submit" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
                 <CheckCircle2 size={16} /> Salvar Datas
               </button>
             </div>
@@ -216,7 +283,7 @@ export default function Dashboard() {
 
       {dpp && (
         <>
-          {/* Card Principal: Comparador de Frutinhas e Desenvolvimento */}
+          {/* BENTO HERO CARD: Tamanho do Bebê & Semana */}
           <div className="baby-size-hero">
             <div className="baby-hero-top">
               <div className="baby-fruit-box">
@@ -231,10 +298,11 @@ export default function Dashboard() {
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         textTransform: 'uppercase',
-                        padding: '3px 10px',
+                        padding: '4px 12px',
                         borderRadius: '999px',
-                        backgroundColor: '#f3e8ff',
-                        color: '#7e22ce',
+                        backgroundColor: 'var(--accent-soft)',
+                        color: 'var(--accent)',
+                        letterSpacing: '0.04em',
                       }}
                     >
                       {babyInfo.trimester}
@@ -244,11 +312,11 @@ export default function Dashboard() {
                       <span
                         style={{
                           fontSize: '0.75rem',
-                          fontWeight: 600,
-                          padding: '3px 10px',
+                          fontWeight: 700,
+                          padding: '4px 12px',
                           borderRadius: '999px',
-                          backgroundColor: '#dcfce7',
-                          color: '#15803d',
+                          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                          color: '#10b981',
                         }}
                       >
                         🎉 Faltam {daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}
@@ -268,12 +336,12 @@ export default function Dashboard() {
 
                   <div className="baby-metrics-row">
                     <div className="baby-metric-badge">
-                      <Ruler size={14} style={{ color: '#2563eb' }} />
+                      <Ruler size={14} style={{ color: 'var(--accent)' }} />
                       <span>Comprimento: <b>{babyInfo.size}</b></span>
                     </div>
 
                     <div className="baby-metric-badge">
-                      <Scale size={14} style={{ color: '#16a34a' }} />
+                      <Scale size={14} style={{ color: '#10b981' }} />
                       <span>Peso aprox: <b>{babyInfo.weight}</b></span>
                     </div>
 
@@ -298,7 +366,7 @@ export default function Dashboard() {
                     <ChevronLeft size={16} />
                   </button>
 
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, padding: '0 8px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, padding: '0 8px' }}>
                     Semana {viewedWeek} de 40
                   </span>
 
@@ -321,7 +389,7 @@ export default function Dashboard() {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      fontWeight: 600,
+                      fontWeight: 700,
                     }}
                   >
                     Voltar para minha semana ({currentWeek})
@@ -332,7 +400,7 @@ export default function Dashboard() {
 
             {/* Destaque do Desenvolvimento da Semana */}
             <div className="baby-highlight-quote">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, marginBottom: '4px', color: 'var(--primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, marginBottom: '4px', color: 'var(--primary)' }}>
                 <Sparkles size={16} style={{ color: '#ca8a04' }} />
                 <span>Marco de Desenvolvimento:</span>
               </div>
@@ -349,9 +417,104 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              <div className="progress-container">
+              <div className="progress-container" style={{ margin: 0 }}>
                 <div className="progress-bar" style={{ width: `${progress}%` }}></div>
               </div>
+            </div>
+          </div>
+
+          {/* BARRA DE ATALHOS RÁPIDOS (QUICK ACTIONS) */}
+          <div className="quick-actions-bar">
+            <Link to="/diary" className="quick-action-pill">
+              <Camera size={16} style={{ color: 'var(--accent)' }} />
+              <span>Nova Foto / Relato</span>
+            </Link>
+
+            <Link to="/kicks" className="quick-action-pill">
+              <Footprints size={16} style={{ color: '#ec4899' }} />
+              <span>Contar Chutes</span>
+            </Link>
+
+            <Link to="/medical-summary" className="quick-action-pill">
+              <Stethoscope size={16} style={{ color: '#10b981' }} />
+              <span>Ficha Médica</span>
+            </Link>
+
+            <Link to="/calculator" className="quick-action-pill">
+              <Package size={16} style={{ color: '#ca8a04' }} />
+              <span>Estoque de Fraldas</span>
+            </Link>
+
+            <Link to="/memory-book" className="quick-action-pill">
+              <BookOpen size={16} style={{ color: '#8b5cf6' }} />
+              <span>Livro do Bebê</span>
+            </Link>
+          </div>
+
+          {/* BENTO STATS ROW (4 CARDS) */}
+          <div className="bento-stats-grid">
+            {/* Card 1: Contagem Regressiva */}
+            <div className="bento-stat-card">
+              <div className="bento-stat-header">
+                <span className="bento-stat-label">Contagem Regressiva</span>
+                <div className="bento-stat-icon" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}>
+                  <Calendar size={18} />
+                </div>
+              </div>
+              <div className="bento-stat-value">
+                {daysLeft !== null ? daysLeft : '---'} <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-muted)' }}>dias</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Previsto para {formatDateBR(dpp)}
+              </span>
+            </div>
+
+            {/* Card 2: Chutes do Bebê */}
+            <div className="bento-stat-card">
+              <div className="bento-stat-header">
+                <span className="bento-stat-label">Movimentos Fetais</span>
+                <div className="bento-stat-icon" style={{ backgroundColor: 'rgba(236, 72, 153, 0.15)', color: '#ec4899' }}>
+                  <Footprints size={18} />
+                </div>
+              </div>
+              <div className="bento-stat-value" style={{ color: '#db2777' }}>
+                {kickSessionsCount} <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-muted)' }}>sessões</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {lastKickSession ? `Última: ${lastKickSession.kicksCount} chutes em ${Math.round(lastKickSession.durationSeconds / 60)}m` : 'Nenhum teste recente'}
+              </span>
+            </div>
+
+            {/* Card 3: Estoque de Fraldas */}
+            <div className="bento-stat-card">
+              <div className="bento-stat-header">
+                <span className="bento-stat-label">Estoque de Fraldas</span>
+                <div className="bento-stat-icon" style={{ backgroundColor: 'rgba(202, 138, 4, 0.15)', color: '#ca8a04' }}>
+                  <Package size={18} />
+                </div>
+              </div>
+              <div className="bento-stat-value" style={{ color: '#ca8a04' }}>
+                {diaperStockPercentage}% <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>garantido</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {diaperStockPercentage >= 100 ? '🎉 Meta atingida!' : 'Compradas & Chá de Bebê'}
+              </span>
+            </div>
+
+            {/* Card 4: Evolução de Peso */}
+            <div className="bento-stat-card">
+              <div className="bento-stat-header">
+                <span className="bento-stat-label">Ganho Ponderal</span>
+                <div className="bento-stat-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+                  <Scale size={18} />
+                </div>
+              </div>
+              <div className="bento-stat-value" style={{ color: '#10b981' }}>
+                {weightGain ? weightGain : '---'}
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {weightGain ? 'Evolução acumulada' : 'Acompanhe na Curva de Peso'}
+              </span>
             </div>
           </div>
 
@@ -360,31 +523,33 @@ export default function Dashboard() {
             <div
               className="card"
               style={{
-                backgroundColor: '#fff7ed',
-                borderColor: '#fed7aa',
+                backgroundColor: 'rgba(234, 88, 12, 0.08)',
+                borderColor: 'rgba(234, 88, 12, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
                 gap: '12px',
-                padding: '16px 20px',
+                padding: '18px 22px',
+                marginBottom: '24px',
+                borderRadius: 'var(--radius-lg)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ backgroundColor: '#ffedd5', padding: '10px', borderRadius: '50%', color: '#ea580c' }}>
-                  <Timer size={22} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ backgroundColor: 'rgba(234, 88, 12, 0.15)', padding: '12px', borderRadius: '50%', color: '#ea580c' }}>
+                  <Timer size={24} />
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#9a3412' }}>
-                    Você está na reta final!
+                  <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#9a3412' }}>
+                    Você está na reta final da gestação! ⏰
                   </h4>
                   <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: '#c2410c' }}>
-                    Monitore o ritmo das contrações de treinamento ou trabalho de parto com o nosso cronômetro.
+                    Monitore a duração e o intervalo das contrações em tempo real com a regra 5-1-1.
                   </p>
                 </div>
               </div>
 
-              <Link to="/contractions" className="btn btn-primary" style={{ backgroundColor: '#ea580c', fontSize: '0.85rem', padding: '8px 14px' }}>
+              <Link to="/contractions" className="btn btn-primary" style={{ backgroundColor: '#ea580c', fontSize: '0.85rem', padding: '8px 16px', fontWeight: 600 }}>
                 Abrir Cronômetro
               </Link>
             </div>
@@ -393,20 +558,27 @@ export default function Dashboard() {
       )}
 
       {/* Widgets Inferiores (Agenda e Checklist) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '24px' }}>
-        <div className="card">
-          <div className="flex-row" style={{ marginBottom: '16px', color: 'var(--primary)' }}>
-            <CalendarHeart size={22} />
-            <h2 className="card-title" style={{ margin: 0 }}>Próximas Consultas</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        <div className="card" style={{ marginBottom: 0 }}>
+          <div className="flex-row" style={{ justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div className="flex-row" style={{ color: 'var(--primary)' }}>
+              <CalendarHeart size={20} style={{ color: 'var(--accent)' }} />
+              <h2 className="card-title" style={{ margin: 0, fontSize: '1.05rem' }}>Próximas Consultas</h2>
+            </div>
+            <Link to="/agenda" style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Ver todas <ArrowRight size={14} />
+            </Link>
           </div>
           {upcomingEvents.length === 0 ? (
-            <p className="card-text">Nenhum evento futuro agendado.</p>
+            <div className="empty-state" style={{ padding: '24px 16px' }}>
+              Nenhum evento futuro agendado. Adicione suas consultas na Agenda!
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {upcomingEvents.map((ev) => (
-                <div key={ev.id} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
-                  <div style={{ fontWeight: 600 }}>{ev.title}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--accent)', marginTop: '4px' }}>
+                <div key={ev.id} style={{ padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--surface-hover)' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{ev.title}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--accent)', marginTop: '4px', fontWeight: 500 }}>
                     {formatDateBR(ev.date)} · {ev.type}
                   </div>
                 </div>
@@ -415,19 +587,26 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="card">
-          <div className="flex-row" style={{ marginBottom: '16px', color: 'var(--primary)' }}>
-            <ListChecks size={22} />
-            <h2 className="card-title" style={{ margin: 0 }}>Tarefas Pendentes</h2>
+        <div className="card" style={{ marginBottom: 0 }}>
+          <div className="flex-row" style={{ justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div className="flex-row" style={{ color: 'var(--primary)' }}>
+              <ListChecks size={20} style={{ color: '#10b981' }} />
+              <h2 className="card-title" style={{ margin: 0, fontSize: '1.05rem' }}>Tarefas da Maternidade</h2>
+            </div>
+            <Link to="/checklists" style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Ver listas <ArrowRight size={14} />
+            </Link>
           </div>
           {pendingTasks.length === 0 ? (
-            <p className="card-text">Tudo em dia por aqui! ✅</p>
+            <div className="empty-state" style={{ padding: '24px 16px' }}>
+              Tudo em dia com a mala da maternidade e enxoval! 🎉
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {pendingTasks.map((task) => (
-                <div key={task.id} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div key={task.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--surface-hover)' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--danger)', flexShrink: 0 }}></div>
-                  <span style={{ fontWeight: 500 }}>{task.title}</span>
+                  <span style={{ fontWeight: 500, fontSize: '0.9rem' }}>{task.title}</span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{task.category}</span>
                 </div>
               ))}
