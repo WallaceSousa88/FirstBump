@@ -2126,6 +2126,438 @@ input, textarea, select {
   margin-bottom: 12px;
 }
 
+/* ── White Noise & Sleep Sounds Player ─────────────────────────────────────── */
+.white-noise-hero {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-hover) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 36px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+}
+
+.sound-circle-btn {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.sound-circle-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.45);
+}
+
+.sound-circle-btn.playing {
+  background: #10b981;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.soundwave-visualizer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 5px;
+  height: 32px;
+  margin: 14px auto 0;
+}
+
+.soundwave-bar {
+  width: 4px;
+  background: var(--accent);
+  border-radius: 999px;
+  animation: soundwave-anim 1.2s ease-in-out infinite alternate;
+}
+
+.soundwave-bar:nth-child(1) { height: 8px; animation-delay: 0.1s; }
+.soundwave-bar:nth-child(2) { height: 16px; animation-delay: 0.3s; }
+.soundwave-bar:nth-child(3) { height: 26px; animation-delay: 0.2s; }
+.soundwave-bar:nth-child(4) { height: 18px; animation-delay: 0.4s; }
+.soundwave-bar:nth-child(5) { height: 28px; animation-delay: 0.15s; }
+.soundwave-bar:nth-child(6) { height: 14px; animation-delay: 0.35s; }
+.soundwave-bar:nth-child(7) { height: 22px; animation-delay: 0.25s; }
+.soundwave-bar:nth-child(8) { height: 10px; animation-delay: 0.45s; }
+
+@keyframes soundwave-anim {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1.1); }
+}
+
+.sound-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.sound-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sound-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.sound-card.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.sound-emoji-box {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Wellness & Hydration Tracker ─────────────────────────────────────────── */
+.wellness-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.wellness-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .wellness-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Water Bottle & Glass Visualizer */
+.water-visualizer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+}
+
+.water-bottle-cylinder {
+  width: 140px;
+  height: 240px;
+  border: 4px solid var(--border);
+  border-radius: 40px 40px 30px 30px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(14, 165, 233, 0.05);
+  box-shadow: inset 0 0 15px rgba(14, 165, 233, 0.1), var(--shadow-md);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="dark"] .water-bottle-cylinder {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: #334155;
+}
+
+.water-bottle-cap {
+  position: absolute;
+  top: -12px;
+  width: 50px;
+  height: 12px;
+  background: var(--text-muted);
+  border-radius: 4px 4px 0 0;
+}
+
+.water-fill-level {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.water-fill-level::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6) 0%, rgba(56, 189, 248, 0.8) 100%);
+  border-radius: 50%;
+  animation: wave-pulse 2s infinite ease-in-out alternate;
+}
+
+@keyframes wave-pulse {
+  0% { transform: scaleY(0.7); }
+  100% { transform: scaleY(1.3); }
+}
+
+.water-bottle-text {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .water-bottle-text {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.water-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.water-add-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.water-add-btn:hover {
+  border-color: #0284c7;
+  background: rgba(14, 165, 233, 0.08);
+  transform: translateY(-2px);
+}
+
+.water-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Vitamin Items */
+.vitamin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vitamin-card-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.vitamin-card-item:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.vitamin-card-item.taken {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="dark"] .vitamin-card-item.taken {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.vitamin-checkbox-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.vitamin-checkbox-btn.checked {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Mood & Symptoms selectors */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.mood-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.mood-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.mood-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+  transform: scale(1.03);
+}
+
+.symptom-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.8rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.symptom-tag-pill:hover {
+  background: var(--surface-hover);
+}
+
+.symptom-tag-pill.active {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #dc2626;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .symptom-tag-pill.active {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Weekly streak bar */
+.streak-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.streak-day-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.streak-day-card.today {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+
+
 
 
 

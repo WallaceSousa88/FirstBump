@@ -13,6 +13,8 @@ const KEYS = {
   diaperInventory: 'firstbump_diaper_inventory',
   budgetItems: 'firstbump_budget_items',
   medicalInfo: 'firstbump_medical_info',
+  wellnessLogs: 'firstbump_wellness_logs',
+  wellnessVitamins: 'firstbump_wellness_vitamins',
 };
 
 function generateId() {
@@ -285,6 +287,116 @@ export const storage = {
     return data;
   },
 
+  // ── Wellness & Hydration Tracker ───────────────────────────────────────────
+  getWellnessLogs: () => {
+    return JSON.parse(localStorage.getItem(KEYS.wellnessLogs) || '{}');
+  },
+  getWellnessLog: (date) => {
+    const logs = JSON.parse(localStorage.getItem(KEYS.wellnessLogs) || '{}');
+    return logs[date] || {
+      date,
+      waterMl: 0,
+      waterGoalMl: 2500,
+      vitaminsTaken: [],
+      vitaminsTimestamps: {},
+      mood: '',
+      energyLevel: 0,
+      symptoms: [],
+      notes: '',
+    };
+  },
+  saveWellnessLog: (date, logData) => {
+    const logs = JSON.parse(localStorage.getItem(KEYS.wellnessLogs) || '{}');
+    logs[date] = { ...logs[date], ...logData, date };
+    localStorage.setItem(KEYS.wellnessLogs, JSON.stringify(logs));
+    return logs[date];
+  },
+  getWellnessVitamins: () => {
+    const stored = localStorage.getItem(KEYS.wellnessVitamins);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    // Default prenatal vitamins
+    const defaultVitamins = [
+      {
+        id: 'folic_acid',
+        name: 'Ácido Fólico / Metilfolato',
+        dosage: '400 - 800 mcg',
+        period: 'Manhã',
+        benefits: 'Essencial para o fechamento adequado do tubo neural do bebê.',
+        tip: 'Melhor absorvido pela manhã com um copo de água.',
+        isDefault: true,
+      },
+      {
+        id: 'iron',
+        name: 'Ferro (Sulfato Ferroso / Quelato)',
+        dosage: '30 - 60 mg',
+        period: 'Tarde / Almoço',
+        benefits: 'Previne anemia gestacional e garante fluxo de oxigênio pela placenta.',
+        tip: '💡 Dica de Ouro: Tome com suco de laranja/limão (Vitamina C). Evite tomar junto com leite, queijo (cálcio) ou café.',
+        isDefault: true,
+      },
+      {
+        id: 'dha_omega3',
+        name: 'Ômega 3 (DHA Gestacional)',
+        dosage: '200 - 300 mg DHA',
+        period: 'Almoço / Jantar',
+        benefits: 'Desenvolvimento do cérebro, neurônios e visão do bebê.',
+        tip: 'Tomar junto com as refeições principais para otimizar a absorção lipídica.',
+        isDefault: true,
+      },
+      {
+        id: 'vitamin_d',
+        name: 'Vitamina D3',
+        dosage: '1000 - 2000 UI',
+        period: 'Manhã',
+        benefits: 'Fixação de cálcio, saúde dos dentes/ossos e imunidade.',
+        tip: 'Vitamina lipossolúvel: consuma após o café da manhã com gorduras boas (azeite, ovos, abacate).',
+        isDefault: true,
+      },
+      {
+        id: 'calcium_magnesium',
+        name: 'Cálcio & Magnésio',
+        dosage: '500 - 1000 mg',
+        period: 'Noite',
+        benefits: 'Fortalecimento da estrutura óssea fetal e relaxamento contra cãibras.',
+        tip: '💡 Dica: Tome pelo menos 2 horas antes ou depois do ferro para não competir na absorção.',
+        isDefault: true,
+      },
+      {
+        id: 'multivitamin',
+        name: 'Polivitamínico Gestacional',
+        dosage: '1 cápsula',
+        period: 'Manhã',
+        benefits: 'Suporte completo de micronutrientes pré-natais.',
+        tip: 'Tome logo após se alimentar para evitar desconforto gástrico.',
+        isDefault: true,
+      },
+    ];
+    localStorage.setItem(KEYS.wellnessVitamins, JSON.stringify(defaultVitamins));
+    return defaultVitamins;
+  },
+  saveWellnessVitamins: (vitamins) => {
+    localStorage.setItem(KEYS.wellnessVitamins, JSON.stringify(vitamins));
+    return vitamins;
+  },
+  addWellnessVitamin: (data) => {
+    const vitamins = storage.getWellnessVitamins();
+    const newVitamin = {
+      ...data,
+      id: 'custom_' + generateId(),
+      isDefault: false,
+    };
+    vitamins.push(newVitamin);
+    localStorage.setItem(KEYS.wellnessVitamins, JSON.stringify(vitamins));
+    return newVitamin;
+  },
+  deleteWellnessVitamin: (id) => {
+    const vitamins = storage.getWellnessVitamins().filter((v) => v.id !== id);
+    localStorage.setItem(KEYS.wellnessVitamins, JSON.stringify(vitamins));
+    return { ok: true };
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -300,7 +412,7 @@ export const storage = {
   // ── Export / Import ──────────────────────────────────────────────────────────
   exportData: () => {
     const data = {
-      version: '1.0',
+      version: '1.1',
       exportedAt: new Date().toISOString(),
       checklists: getAll(KEYS.checklists),
       diary: getAll(KEYS.diary),
@@ -315,6 +427,8 @@ export const storage = {
       diaperInventory: JSON.parse(localStorage.getItem(KEYS.diaperInventory) || 'null'),
       budgetItems: getAll(KEYS.budgetItems),
       medicalInfo: JSON.parse(localStorage.getItem(KEYS.medicalInfo) || 'null'),
+      wellnessLogs: JSON.parse(localStorage.getItem(KEYS.wellnessLogs) || '{}'),
+      wellnessVitamins: JSON.parse(localStorage.getItem(KEYS.wellnessVitamins) || 'null'),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -333,20 +447,22 @@ export const storage = {
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.checklists)      saveAll(KEYS.checklists, data.checklists);
-          if (data.diary)           saveAll(KEYS.diary, data.diary);
-          if (data.agenda)          saveAll(KEYS.agenda, data.agenda);
-          if (data.contractions)    saveAll(KEYS.contractions, data.contractions);
-          if (data.weights)         saveAll(KEYS.weights, data.weights);
-          if (data.favoriteNames)   saveAll(KEYS.favoriteNames, data.favoriteNames);
-          if (data.customNames)     saveAll(KEYS.customNames, data.customNames);
-          if (data.nameCombos)      saveAll(KEYS.nameCombos, data.nameCombos);
-          if (data.birthPlan)       localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
-          if (data.kickSessions)    saveAll(KEYS.kickSessions, data.kickSessions);
-          if (data.diaperInventory) localStorage.setItem(KEYS.diaperInventory, JSON.stringify(data.diaperInventory));
-          if (data.budgetItems)     saveAll(KEYS.budgetItems, data.budgetItems);
-          if (data.medicalInfo)     localStorage.setItem(KEYS.medicalInfo, JSON.stringify(data.medicalInfo));
-          if (data.settings)        localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
+          if (data.checklists)       saveAll(KEYS.checklists, data.checklists);
+          if (data.diary)            saveAll(KEYS.diary, data.diary);
+          if (data.agenda)           saveAll(KEYS.agenda, data.agenda);
+          if (data.contractions)     saveAll(KEYS.contractions, data.contractions);
+          if (data.weights)          saveAll(KEYS.weights, data.weights);
+          if (data.favoriteNames)    saveAll(KEYS.favoriteNames, data.favoriteNames);
+          if (data.customNames)      saveAll(KEYS.customNames, data.customNames);
+          if (data.nameCombos)       saveAll(KEYS.nameCombos, data.nameCombos);
+          if (data.birthPlan)        localStorage.setItem(KEYS.birthPlan, JSON.stringify(data.birthPlan));
+          if (data.kickSessions)     saveAll(KEYS.kickSessions, data.kickSessions);
+          if (data.diaperInventory)  localStorage.setItem(KEYS.diaperInventory, JSON.stringify(data.diaperInventory));
+          if (data.budgetItems)      saveAll(KEYS.budgetItems, data.budgetItems);
+          if (data.medicalInfo)      localStorage.setItem(KEYS.medicalInfo, JSON.stringify(data.medicalInfo));
+          if (data.wellnessLogs)     localStorage.setItem(KEYS.wellnessLogs, JSON.stringify(data.wellnessLogs));
+          if (data.wellnessVitamins) localStorage.setItem(KEYS.wellnessVitamins, JSON.stringify(data.wellnessVitamins));
+          if (data.settings)         localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {
           reject(new Error('Arquivo inválido. Certifique-se de importar um backup do FirstBump.'));

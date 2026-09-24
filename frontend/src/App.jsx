@@ -13,6 +13,8 @@ import {
   Footprints,
   Calculator,
   Stethoscope,
+  Waves,
+  Droplets,
   Download,
   Upload,
   Sun,
@@ -38,6 +40,8 @@ import KickCounter from './pages/KickCounter';
 import DiaperBudget from './pages/DiaperBudget';
 import MemoryBook from './pages/MemoryBook';
 import MedicalSummary from './pages/MedicalSummary';
+import WhiteNoise from './pages/WhiteNoise';
+import WellnessTracker from './pages/WellnessTracker';
 
 const COLOR_THEMES = [
   { key: 'ocean', label: 'Azul Sereno', emoji: '🌊', color: '#2563eb' },
@@ -232,6 +236,12 @@ function AppContent() {
           <NavLink to="/contractions" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Timer size={20} /> Contrações
           </NavLink>
+          <NavLink to="/wellness" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Droplets size={20} /> Água & Vitaminas
+          </NavLink>
+          <NavLink to="/white-noise" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Waves size={20} /> Sons do Útero
+          </NavLink>
           <NavLink to="/guides" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Library size={20} /> Biblioteca
           </NavLink>
@@ -319,6 +329,8 @@ function AppContent() {
           <Route path="/kicks" element={<KickCounter />} />
           <Route path="/calculator" element={<DiaperBudget />} />
           <Route path="/contractions" element={<Contractions />} />
+          <Route path="/wellness" element={<WellnessTracker />} />
+          <Route path="/white-noise" element={<WhiteNoise />} />
           <Route path="/guides" element={<Guides />} />
         </Routes>
       </main>

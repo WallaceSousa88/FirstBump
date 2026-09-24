@@ -22,6 +22,9 @@ import {
   Heart,
   BookOpen,
   ArrowRight,
+  Droplets,
+  Pill,
+  Plus,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -63,6 +66,8 @@ export default function Dashboard() {
   const [lastKickSession, setLastKickSession] = useState(null);
   const [diaperStockPercentage, setDiaperStockPercentage] = useState(0);
   const [weightGain, setWeightGain] = useState(null);
+  const [wellnessToday, setWellnessToday] = useState({ waterMl: 0, waterGoalMl: 2500, vitaminsTaken: [] });
+  const [totalVitaminsCount, setTotalVitaminsCount] = useState(0);
 
   useEffect(() => {
     const savedDpp = storage.getSetting('dpp') || storage.getSetting('due_date');
@@ -117,7 +122,28 @@ export default function Dashboard() {
       const diff = current - pre;
       setWeightGain(diff >= 0 ? `+${diff.toFixed(1)} kg` : `${diff.toFixed(1)} kg`);
     }
+
+    // Carrega dados de bem-estar / água / vitaminas
+    loadWellnessData();
   }, []);
+
+  const loadWellnessData = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const log = storage.getWellnessLog(todayStr);
+    const vitamins = storage.getWellnessVitamins();
+    setWellnessToday(log);
+    setTotalVitaminsCount(vitamins.length);
+  };
+
+  const handleQuickAddWater = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const todayStr = new Date().toISOString().split('T')[0];
+    const currentLog = storage.getWellnessLog(todayStr);
+    const newTotal = (currentLog.waterMl || 0) + 200;
+    storage.saveWellnessLog(todayStr, { waterMl: newTotal });
+    loadWellnessData();
+  };
 
   // Cálculo da Idade Gestacional (Semanas + Dias) e Dias Restantes
   const calculateGestationalAge = (targetDpp, targetDum) => {
@@ -425,6 +451,11 @@ export default function Dashboard() {
 
           {/* BARRA DE ATALHOS RÁPIDOS (QUICK ACTIONS) */}
           <div className="quick-actions-bar">
+            <Link to="/wellness" className="quick-action-pill">
+              <Droplets size={16} style={{ color: '#0284c7' }} />
+              <span>Água & Vitaminas</span>
+            </Link>
+
             <Link to="/diary" className="quick-action-pill">
               <Camera size={16} style={{ color: 'var(--accent)' }} />
               <span>Nova Foto / Relato</span>
@@ -451,9 +482,49 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* BENTO STATS ROW (4 CARDS) */}
+          {/* BENTO STATS ROW (5 CARDS / STATS GRID) */}
           <div className="bento-stats-grid">
-            {/* Card 1: Contagem Regressiva */}
+            {/* Card 1: Hidratação Hoje */}
+            <div className="bento-stat-card" style={{ position: 'relative' }}>
+              <div className="bento-stat-header">
+                <span className="bento-stat-label">Água Hoje</span>
+                <div className="bento-stat-icon" style={{ backgroundColor: 'rgba(2, 132, 199, 0.15)', color: '#0284c7' }}>
+                  <Droplets size={18} />
+                </div>
+              </div>
+              <div className="bento-stat-value" style={{ color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>
+                  {wellnessToday.waterMl || 0}{' '}
+                  <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                    / {wellnessToday.waterGoalMl || 2500} ml
+                  </span>
+                </span>
+                <button
+                  onClick={handleQuickAddWater}
+                  className="btn-icon"
+                  style={{
+                    background: 'rgba(2, 132, 199, 0.15)',
+                    color: '#0284c7',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2px',
+                    height: 'auto',
+                  }}
+                  title="Tomar 1 copo (+200ml)"
+                >
+                  <Plus size={13} /> 200ml
+                </button>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {(wellnessToday.vitaminsTaken || []).length} de {totalVitaminsCount || 6} vitaminas tomadas
+              </span>
+            </div>
+
+            {/* Card 2: Contagem Regressiva */}
             <div className="bento-stat-card">
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Contagem Regressiva</span>
@@ -469,7 +540,7 @@ export default function Dashboard() {
               </span>
             </div>
 
-            {/* Card 2: Chutes do Bebê */}
+            {/* Card 3: Chutes do Bebê */}
             <div className="bento-stat-card">
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Movimentos Fetais</span>
@@ -485,7 +556,7 @@ export default function Dashboard() {
               </span>
             </div>
 
-            {/* Card 3: Estoque de Fraldas */}
+            {/* Card 4: Estoque de Fraldas */}
             <div className="bento-stat-card">
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Estoque de Fraldas</span>
@@ -501,7 +572,7 @@ export default function Dashboard() {
               </span>
             </div>
 
-            {/* Card 4: Evolução de Peso */}
+            {/* Card 5: Evolução de Peso */}
             <div className="bento-stat-card">
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Ganho Ponderal</span>
