@@ -15,6 +15,7 @@ import {
   Stethoscope,
   Waves,
   Droplets,
+  PartyPopper,
   Download,
   Upload,
   Sun,
@@ -42,6 +43,7 @@ import MemoryBook from './pages/MemoryBook';
 import MedicalSummary from './pages/MedicalSummary';
 import WhiteNoise from './pages/WhiteNoise';
 import WellnessTracker from './pages/WellnessTracker';
+import BirthAnnouncement from './pages/BirthAnnouncement';
 
 const COLOR_THEMES = [
   { key: 'ocean', label: 'Azul Sereno', emoji: '🌊', color: '#2563eb' },
@@ -239,6 +241,9 @@ function AppContent() {
           <NavLink to="/wellness" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Droplets size={20} /> Água & Vitaminas
           </NavLink>
+          <NavLink to="/birth-announcement" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <PartyPopper size={20} /> Cartão Nascimento
+          </NavLink>
           <NavLink to="/white-noise" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Waves size={20} /> Sons do Útero
           </NavLink>
@@ -330,6 +335,8 @@ function AppContent() {
           <Route path="/calculator" element={<DiaperBudget />} />
           <Route path="/contractions" element={<Contractions />} />
           <Route path="/wellness" element={<WellnessTracker />} />
+          <Route path="/birth-announcement" element={<BirthAnnouncement />} />
+          <Route path="/birth-card" element={<BirthAnnouncement />} />
           <Route path="/white-noise" element={<WhiteNoise />} />
           <Route path="/guides" element={<Guides />} />
         </Routes>

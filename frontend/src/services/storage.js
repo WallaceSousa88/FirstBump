@@ -15,6 +15,7 @@ const KEYS = {
   medicalInfo: 'firstbump_medical_info',
   wellnessLogs: 'firstbump_wellness_logs',
   wellnessVitamins: 'firstbump_wellness_vitamins',
+  birthCard: 'firstbump_birth_card',
 };
 
 function generateId() {
@@ -397,6 +398,16 @@ export const storage = {
     return { ok: true };
   },
 
+  // ── Birth Card Announcement ────────────────────────────────────────────────
+  getBirthCard: () => {
+    const data = localStorage.getItem(KEYS.birthCard);
+    return data ? JSON.parse(data) : null;
+  },
+  saveBirthCard: (cardData) => {
+    localStorage.setItem(KEYS.birthCard, JSON.stringify(cardData));
+    return cardData;
+  },
+
   // ── Settings ─────────────────────────────────────────────────────────────────
   getSetting: (key) => {
     const settings = JSON.parse(localStorage.getItem(KEYS.settings) || '{}');
@@ -412,7 +423,7 @@ export const storage = {
   // ── Export / Import ──────────────────────────────────────────────────────────
   exportData: () => {
     const data = {
-      version: '1.1',
+      version: '1.2',
       exportedAt: new Date().toISOString(),
       checklists: getAll(KEYS.checklists),
       diary: getAll(KEYS.diary),
@@ -429,6 +440,7 @@ export const storage = {
       medicalInfo: JSON.parse(localStorage.getItem(KEYS.medicalInfo) || 'null'),
       wellnessLogs: JSON.parse(localStorage.getItem(KEYS.wellnessLogs) || '{}'),
       wellnessVitamins: JSON.parse(localStorage.getItem(KEYS.wellnessVitamins) || 'null'),
+      birthCard: JSON.parse(localStorage.getItem(KEYS.birthCard) || 'null'),
       settings: JSON.parse(localStorage.getItem(KEYS.settings) || '{}'),
     };
     const json = JSON.stringify(data, null, 2);
@@ -462,6 +474,7 @@ export const storage = {
           if (data.medicalInfo)      localStorage.setItem(KEYS.medicalInfo, JSON.stringify(data.medicalInfo));
           if (data.wellnessLogs)     localStorage.setItem(KEYS.wellnessLogs, JSON.stringify(data.wellnessLogs));
           if (data.wellnessVitamins) localStorage.setItem(KEYS.wellnessVitamins, JSON.stringify(data.wellnessVitamins));
+          if (data.birthCard)        localStorage.setItem(KEYS.birthCard, JSON.stringify(data.birthCard));
           if (data.settings)         localStorage.setItem(KEYS.settings, JSON.stringify(data.settings));
           resolve(data);
         } catch (err) {

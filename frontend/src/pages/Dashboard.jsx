@@ -451,6 +451,11 @@ export default function Dashboard() {
 
           {/* BARRA DE ATALHOS RÁPIDOS (QUICK ACTIONS) */}
           <div className="quick-actions-bar">
+            <Link to="/birth-announcement" className="quick-action-pill">
+              <Sparkles size={16} style={{ color: '#db2777' }} />
+              <span>Cartão Nascimento</span>
+            </Link>
+
             <Link to="/wellness" className="quick-action-pill">
               <Droplets size={16} style={{ color: '#0284c7' }} />
               <span>Água & Vitaminas</span>

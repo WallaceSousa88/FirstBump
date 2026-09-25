@@ -2556,6 +2556,134 @@ input, textarea, select {
   font-weight: 700;
 }
 
+/* ── Birth Card Announcement Generator ───────────────────────────────────── */
+.birthcard-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .birthcard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.birthcard-preview-sticky {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.birthcard-canvas-container {
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-lg), 0 20px 35px -5px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+.birthcard-canvas-container:hover {
+  transform: scale(1.01);
+}
+
+.birthcard-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.theme-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.theme-chip-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.theme-chip-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.format-toggle-bar {
+  display: flex;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 4px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+}
+
+.format-tab-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.format-tab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.image-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface-hover);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.image-dropzone:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.image-thumb-preview {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+
 
 
 
