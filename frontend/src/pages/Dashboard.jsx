@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { storage } from '../services/storage';
+import { useToast } from '../context/ToastContext';
 import { getBabySize } from '../data/babySizes';
 import { DIAPER_SIZES } from '../data/diaperData';
 import {
@@ -127,6 +128,8 @@ export default function Dashboard() {
     loadWellnessData();
   }, []);
 
+  const toast = useToast();
+
   const loadWellnessData = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const log = storage.getWellnessLog(todayStr);
@@ -143,6 +146,7 @@ export default function Dashboard() {
     const newTotal = (currentLog.waterMl || 0) + 200;
     storage.saveWellnessLog(todayStr, { waterMl: newTotal });
     loadWellnessData();
+    toast.success('Mais 200ml de água registrados! 💧');
   };
 
   // Cálculo da Idade Gestacional (Semanas + Dias) e Dias Restantes
@@ -196,6 +200,7 @@ export default function Dashboard() {
     setDum(formDum);
     calculateGestationalAge(formDpp, formDum);
     setIsEditingDates(false);
+    toast.success('Datas da gestação atualizadas com sucesso! 👶');
   };
 
   const babyInfo = getBabySize(viewedWeek);

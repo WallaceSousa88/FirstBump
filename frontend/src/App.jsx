@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import {
   Home,
@@ -25,9 +25,11 @@ import {
   X,
   Share,
   PlusSquare,
-  ChevronRight,
+  Search,
 } from 'lucide-react';
 import { storage } from './services/storage';
+import { ToastProvider, useToast } from './context/ToastContext';
+import CommandPalette from './components/CommandPalette';
 import Dashboard from './pages/Dashboard';
 import Checklists from './pages/Checklists';
 import Diary from './pages/Diary';
@@ -56,6 +58,7 @@ const COLOR_THEMES = [
 function AppContent() {
   const importRef = useRef(null);
   const location = useLocation();
+  const toast = useToast();
 
   const [theme, setTheme] = useState(() => {
     const saved = storage.getSetting('theme');
@@ -72,11 +75,29 @@ function AppContent() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  // Scroll automático para o topo ao mudar de rota
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname]);
 
   // Fecha o menu mobile ao trocar de rota
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Atalho global de teclado: Ctrl+K / Cmd+K
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -98,12 +119,12 @@ function AppContent() {
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
+      toast.success('Aplicativo instalado com sucesso!');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Checa se já está rodando como standalone (instalado)
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       setIsInstalled(true);
     }
@@ -112,14 +133,13 @@ function AppContent() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [toast]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   const handleInstallClick = async () => {
-    // Se for Chrome / Android com prompt disponível
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -130,19 +150,18 @@ function AppContent() {
       return;
     }
 
-    // Se for iOS / Safari
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (isIos) {
       setShowIosInstallModal(true);
       return;
     }
 
-    // Outros navegadores
-    alert('Para instalar este app:\nNo computador: clique no ícone de instalar na barra de endereços do navegador.\nNo Android: toque no menu (3 pontinhos) e selecione "Adicionar à tela inicial".');
+    toast.info('Para instalar: clique no ícone de instalar na barra de navegação ou menu do navegador.');
   };
 
   const handleExport = () => {
     storage.exportData();
+    toast.success('Backup dos seus dados baixado com sucesso!');
   };
 
   const handleImport = async (e) => {
@@ -150,16 +169,19 @@ function AppContent() {
     if (!file) return;
     try {
       await storage.importData(file);
-      alert('Dados importados com sucesso! A página será recarregada.');
-      window.location.reload();
+      toast.success('Dados importados com sucesso! Recarregando...');
+      setTimeout(() => window.location.reload(), 1200);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
     e.target.value = '';
   };
 
   return (
     <div className="app-container">
+      {/* Busca Rápida Spotlight (Cmd+K) */}
+      <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+
       {/* Topbar Mobile */}
       <div className="mobile-topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '1.15rem', color: 'var(--primary)' }}>
@@ -167,6 +189,14 @@ function AppContent() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => setCommandPaletteOpen(true)}
+            className="btn-icon"
+            title="Buscar ferramentas"
+          >
+            <Search size={18} />
+          </button>
+
           <button
             onClick={toggleTheme}
             className="btn-icon"
@@ -192,7 +222,7 @@ function AppContent() {
 
       {/* Sidebar Lateral */}
       <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div className="sidebar-logo" style={{ margin: 0 }}>
             <span role="img" aria-label="baby">👶</span> FirstBump
           </div>
@@ -204,51 +234,90 @@ function AppContent() {
           )}
         </div>
 
+        {/* Botão de Busca Rápida na Sidebar */}
+        <button
+          onClick={() => setCommandPaletteOpen(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '8px 12px',
+            background: 'var(--surface-hover)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            fontSize: '0.8rem',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            marginBottom: '14px',
+            transition: 'all 0.2s',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Search size={15} style={{ color: 'var(--accent)' }} />
+            <span>Buscar ferramenta...</span>
+          </div>
+          <span style={{ fontSize: '0.7rem', padding: '1px 5px', borderRadius: '4px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 600 }}>
+            ⌘K
+          </span>
+        </button>
+
         <nav className="nav-links">
+          {/* SEÇÃO 1: PRINCIPAL */}
+          <span className="nav-section-title">Principal</span>
           <NavLink to="/" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')} end>
-            <Home size={20} /> Início
+            <Home size={18} /> Início & Painel
           </NavLink>
           <NavLink to="/checklists" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <ListChecks size={20} /> Checklists
-          </NavLink>
-          <NavLink to="/diary" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <BookOpen size={20} /> Diário & Fotos
+            <ListChecks size={18} /> Checklists da Mala
           </NavLink>
           <NavLink to="/agenda" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <CalendarHeart size={20} /> Agenda
+            <CalendarHeart size={18} /> Agenda Pré-Natal
           </NavLink>
-          <NavLink to="/weight" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Scale size={20} /> Curva de Peso
-          </NavLink>
-          <NavLink to="/names" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Sparkles size={20} /> Nomes de Bebê
-          </NavLink>
-          <NavLink to="/medical-summary" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Stethoscope size={20} /> Ficha Médica
-          </NavLink>
-          <NavLink to="/birth-plan" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <ScrollText size={20} /> Plano de Parto
-          </NavLink>
-          <NavLink to="/kicks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Footprints size={20} /> Contador de Chutes
-          </NavLink>
-          <NavLink to="/calculator" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Calculator size={20} /> Fraldas & Orçamento
+
+          {/* SEÇÃO 2: SAÚDE & GESTAÇÃO */}
+          <span className="nav-section-title">Saúde & Gestação</span>
+          <NavLink to="/wellness" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Droplets size={18} /> Água & Vitaminas
           </NavLink>
           <NavLink to="/contractions" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Timer size={20} /> Contrações
+            <Timer size={18} /> Contrações (5-1-1)
           </NavLink>
-          <NavLink to="/wellness" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Droplets size={20} /> Água & Vitaminas
+          <NavLink to="/kicks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Footprints size={18} /> Contador de Chutes
           </NavLink>
+          <NavLink to="/weight" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Scale size={18} /> Curva de Peso
+          </NavLink>
+          <NavLink to="/medical-summary" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Stethoscope size={18} /> Ficha do Obstetra
+          </NavLink>
+
+          {/* SEÇÃO 3: PLANEJAMENTO & ENXOVAL */}
+          <span className="nav-section-title">Planejamento</span>
+          <NavLink to="/names" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Sparkles size={18} /> Nomes de Bebê
+          </NavLink>
+          <NavLink to="/birth-plan" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <ScrollText size={18} /> Plano de Parto
+          </NavLink>
+          <NavLink to="/calculator" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Calculator size={18} /> Fraldas & Orçamento
+          </NavLink>
+
+          {/* SEÇÃO 4: MEMÓRIAS & BEM-ESTAR */}
+          <span className="nav-section-title">Memórias & Relax</span>
           <NavLink to="/birth-announcement" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <PartyPopper size={20} /> Cartão Nascimento
+            <PartyPopper size={18} /> Cartão Nascimento
+          </NavLink>
+          <NavLink to="/diary" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <BookOpen size={18} /> Diário & Fotos
           </NavLink>
           <NavLink to="/white-noise" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Waves size={20} /> Sons do Útero
+            <Waves size={18} /> Sons & Ruído Branco
           </NavLink>
           <NavLink to="/guides" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <Library size={20} /> Biblioteca
+            <Library size={18} /> Biblioteca de Guias
           </NavLink>
         </nav>
 
@@ -436,7 +505,9 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </Router>
   );
 }
