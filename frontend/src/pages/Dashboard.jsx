@@ -45,6 +45,39 @@ function formatDateBR(dateStr) {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
+// Mini Anel de Progresso Circular SVG (estilo Apple Health / Fitness Rings)
+function MiniProgressRing({ percentage = 0, size = 38, stroke = 3.5, color = 'var(--accent)' }) {
+  const radius = (size - stroke) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const safePercent = Math.min(100, Math.max(0, percentage));
+  const offset = circumference - (safePercent / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        stroke="var(--border)"
+        strokeWidth={stroke}
+        fill="transparent"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        stroke={color}
+        strokeWidth={stroke}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        fill="transparent"
+        style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+      />
+    </svg>
+  );
+}
+
 export default function Dashboard() {
   const [dpp, setDpp] = useState('');
   const [dum, setDum] = useState('');
@@ -314,6 +347,52 @@ export default function Dashboard() {
 
       {dpp && (
         <>
+          {/* Carrossel Interativo da Linha do Tempo de Semanas (1 a 40) */}
+          <div className="week-timeline-strip-container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)' }}>
+                Linha do Tempo Gestacional (Semanas 1 - 40)
+              </span>
+              {isBrowsingOtherWeek && (
+                <button
+                  onClick={() => setViewedWeek(currentWeek)}
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--accent)',
+                    background: 'var(--accent-soft)',
+                    border: '1px solid var(--accent)',
+                    padding: '2px 10px',
+                    borderRadius: '999px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                  }}
+                >
+                  Ir para semana atual ({currentWeek}ª)
+                </button>
+              )}
+            </div>
+
+            <div className="week-timeline-strip">
+              {Array.from({ length: 40 }, (_, i) => i + 1).map((w) => {
+                const isCurr = w === currentWeek;
+                const isSel = w === viewedWeek;
+                const wInfo = getBabySize(w);
+                return (
+                  <button
+                    key={w}
+                    onClick={() => setViewedWeek(w)}
+                    className={`week-timeline-pill ${isSel ? 'selected' : ''} ${isCurr ? 'is-current' : ''}`}
+                    title={`Semana ${w}: ${wInfo.name}`}
+                  >
+                    <span className="week-pill-emoji">{wInfo.emoji}</span>
+                    <span className="week-pill-num">Sem {w}</span>
+                    {isCurr && <span className="week-pill-dot" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* BENTO HERO CARD: Tamanho do Bebê & Semana */}
           <div className="baby-size-hero">
             <div className="baby-hero-top">
@@ -410,22 +489,6 @@ export default function Dashboard() {
                     <ChevronRight size={16} />
                   </button>
                 </div>
-
-                {isBrowsingOtherWeek && (
-                  <button
-                    onClick={() => setViewedWeek(currentWeek)}
-                    style={{
-                      fontSize: '0.75rem',
-                      color: 'var(--accent)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                    }}
-                  >
-                    Voltar para minha semana ({currentWeek})
-                  </button>
-                )}
               </div>
             </div>
 
@@ -498,9 +561,11 @@ export default function Dashboard() {
             <div className="bento-stat-card" style={{ position: 'relative' }}>
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Água Hoje</span>
-                <div className="bento-stat-icon" style={{ backgroundColor: 'rgba(2, 132, 199, 0.15)', color: '#0284c7' }}>
-                  <Droplets size={18} />
-                </div>
+                <MiniProgressRing
+                  percentage={Math.min(100, Math.round(((wellnessToday.waterMl || 0) / (wellnessToday.waterGoalMl || 2500)) * 100))}
+                  color="#0284c7"
+                  size={36}
+                />
               </div>
               <div className="bento-stat-value" style={{ color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span>
@@ -538,9 +603,11 @@ export default function Dashboard() {
             <div className="bento-stat-card">
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Contagem Regressiva</span>
-                <div className="bento-stat-icon" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}>
-                  <Calendar size={18} />
-                </div>
+                <MiniProgressRing
+                  percentage={progress}
+                  color="var(--accent)"
+                  size={36}
+                />
               </div>
               <div className="bento-stat-value">
                 {daysLeft !== null ? daysLeft : '---'} <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-muted)' }}>dias</span>
@@ -570,9 +637,11 @@ export default function Dashboard() {
             <div className="bento-stat-card">
               <div className="bento-stat-header">
                 <span className="bento-stat-label">Estoque de Fraldas</span>
-                <div className="bento-stat-icon" style={{ backgroundColor: 'rgba(202, 138, 4, 0.15)', color: '#ca8a04' }}>
-                  <Package size={18} />
-                </div>
+                <MiniProgressRing
+                  percentage={diaperStockPercentage}
+                  color="#ca8a04"
+                  size={36}
+                />
               </div>
               <div className="bento-stat-value" style={{ color: '#ca8a04' }}>
                 {diaperStockPercentage}% <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>garantido</span>

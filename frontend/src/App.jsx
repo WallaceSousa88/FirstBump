@@ -179,6 +179,12 @@ function AppContent() {
 
   return (
     <div className="app-container">
+      {/* Camada de Fundo Aurora Fluida */}
+      <div className="ambient-background-layer" aria-hidden="true">
+        <div className="ambient-orb ambient-orb-1" />
+        <div className="ambient-orb ambient-orb-2" />
+      </div>
+
       {/* Busca Rápida Spotlight (Cmd+K) */}
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
 
