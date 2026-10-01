@@ -236,8 +236,29 @@ export default function Dashboard() {
     toast.success('Datas da gestação atualizadas com sucesso! 👶');
   };
 
+  const [comparisonMode, setComparisonMode] = useState(() => {
+    return localStorage.getItem('fb_comparison_mode') || 'fruit';
+  });
+
+  const handleComparisonModeChange = (mode) => {
+    setComparisonMode(mode);
+    localStorage.setItem('fb_comparison_mode', mode);
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return { title: 'Bom dia, Família! ☀️', sub: 'Que seu dia seja tranquilo e repleto de amor.' };
+    if (hour >= 12 && hour < 18) return { title: 'Boa tarde, Família! 🌸', sub: 'Como você e o seu pacotinho estão se sentindo?' };
+    return { title: 'Boa noite, Família! 🌙', sub: 'Hora de desacelerar, relaxar e descansar o corpo.' };
+  };
+
+  const greeting = getGreeting();
   const babyInfo = getBabySize(viewedWeek);
   const isBrowsingOtherWeek = viewedWeek !== currentWeek;
+  const currentComparison = babyInfo.comparisons?.[comparisonMode] || {
+    name: babyInfo.name,
+    emoji: babyInfo.emoji,
+  };
 
   return (
     <div>
@@ -248,8 +269,11 @@ export default function Dashboard() {
             Seu Acompanhamento Gestacional
           </span>
           <h1 className="page-title" style={{ margin: '2px 0 0', fontSize: '1.9rem', fontWeight: 800 }}>
-            Olá, mamãe & papai! 👋
+            {greeting.title}
           </h1>
+          <p style={{ margin: '2px 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            {greeting.sub}
+          </p>
         </div>
 
         {dpp && (
@@ -377,14 +401,15 @@ export default function Dashboard() {
                 const isCurr = w === currentWeek;
                 const isSel = w === viewedWeek;
                 const wInfo = getBabySize(w);
+                const wComp = wInfo.comparisons?.[comparisonMode] || { name: wInfo.name, emoji: wInfo.emoji };
                 return (
                   <button
                     key={w}
                     onClick={() => setViewedWeek(w)}
                     className={`week-timeline-pill ${isSel ? 'selected' : ''} ${isCurr ? 'is-current' : ''}`}
-                    title={`Semana ${w}: ${wInfo.name}`}
+                    title={`Semana ${w}: ${wComp.name}`}
                   >
-                    <span className="week-pill-emoji">{wInfo.emoji}</span>
+                    <span className="week-pill-emoji">{wComp.emoji}</span>
                     <span className="week-pill-num">Sem {w}</span>
                     {isCurr && <span className="week-pill-dot" />}
                   </button>
@@ -395,10 +420,48 @@ export default function Dashboard() {
 
           {/* BENTO HERO CARD: Tamanho do Bebê & Semana */}
           <div className="baby-size-hero">
+            {/* Seletor de Universo de Comparação */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+              <div className="universe-switcher-bar" role="tablist" aria-label="Seletor de Universo">
+                <button
+                  type="button"
+                  onClick={() => handleComparisonModeChange('fruit')}
+                  className={`universe-tab-btn ${comparisonMode === 'fruit' ? 'active' : ''}`}
+                >
+                  <span>🍓</span>
+                  <span>Frutas & Vegetais</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleComparisonModeChange('object')}
+                  className={`universe-tab-btn ${comparisonMode === 'object' ? 'active' : ''}`}
+                >
+                  <span>🧸</span>
+                  <span>Objetos Fofos</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleComparisonModeChange('animal')}
+                  className={`universe-tab-btn ${comparisonMode === 'animal' ? 'active' : ''}`}
+                >
+                  <span>🐾</span>
+                  <span>Bichinhos</span>
+                </button>
+              </div>
+
+              {babyInfo.month && (
+                <div className="month-trimester-badge">
+                  <span>📅 {babyInfo.month}</span>
+                  <span style={{ opacity: 0.6 }}>•</span>
+                  <span>{babyInfo.trimester}</span>
+                </div>
+              )}
+            </div>
+
             <div className="baby-hero-top">
               <div className="baby-fruit-box">
-                <div className="baby-emoji-circle" title={babyInfo.name}>
-                  {babyInfo.emoji}
+                <div className="baby-emoji-circle" title={currentComparison.name}>
+                  {currentComparison.emoji}
                 </div>
 
                 <div className="baby-fruit-details">
@@ -441,7 +504,7 @@ export default function Dashboard() {
                   </div>
 
                   <h2>
-                    Semana {viewedWeek}: Tamanho de {babyInfo.name}
+                    Semana {viewedWeek}: Tamanho de {currentComparison.name}
                   </h2>
 
                   <div className="baby-metrics-row">
