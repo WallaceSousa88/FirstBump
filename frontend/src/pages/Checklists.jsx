@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { ListChecks, Sparkles, Plus, Trash2, X, CheckCircle2, Download, PackageOpen, Filter } from 'lucide-react';
 import { storage } from '../services/storage';
 import { CHECKLIST_TEMPLATES } from '../data/checklistTemplates';
+import { fireConfetti, fireSparkleBurst } from '../utils/confetti';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
 
 const CATEGORY_MAP = {
   maternidade_bebe: { label: 'Mala do Bebê', emoji: '🍼' },
@@ -34,11 +36,23 @@ export default function Checklists() {
     storage.createChecklistItem({ title: title.trim(), category, is_completed: false });
     setTitle('');
     refresh();
+    soundSynthesizer.playPop();
   };
 
-  const handleToggle = (id, currentStatus) => {
-    storage.updateChecklistItem(id, { is_completed: !currentStatus });
+  const handleToggle = (e, id, currentStatus) => {
+    const newStatus = !currentStatus;
+    storage.updateChecklistItem(id, { is_completed: newStatus });
     refresh();
+
+    if (newStatus) {
+      soundSynthesizer.playChime();
+      if (e && e.currentTarget) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+    } else {
+      soundSynthesizer.playPop();
+    }
   };
 
   const handleDelete = (id) => {
@@ -344,12 +358,12 @@ export default function Checklists() {
                       type="checkbox"
                       className="checkbox-custom"
                       checked={item.is_completed}
-                      onChange={() => handleToggle(item.id, item.is_completed)}
+                      onChange={(e) => handleToggle(e, item.id, item.is_completed)}
                     />
                     <span
                       className={item.is_completed ? 'completed-text' : ''}
                       style={{ fontWeight: 500, cursor: 'pointer', userSelect: 'none', lineHeight: '1.4' }}
-                      onClick={() => handleToggle(item.id, item.is_completed)}
+                      onClick={(e) => handleToggle(e, item.id, item.is_completed)}
                     >
                       {item.title}
                     </span>

@@ -291,6 +291,83 @@ class SoundSynthesizer {
     lfo.start();
     this.activeNodes.push(noise, lfo, lfoGain, filter, gain);
   }
+
+  // ── UI Micro-Interactions (Feedback Tátil & Auditivo) ──────────────────────
+  playChime() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6 (Celestial Chime)
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+        gain.gain.setValueAtTime(0, now + idx * 0.08);
+        gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.6);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.65);
+      });
+    } catch (e) {
+      // Ignore if audio permissions blocked
+    }
+  }
+
+  playPop() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(120, now + 0.09);
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  playHeartbeatMini() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const createThump = (time, freq, decay) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, time);
+        osc.frequency.exponentialRampToValueAtTime(30, time + decay);
+
+        gain.gain.setValueAtTime(0.3, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + decay);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(time);
+        osc.stop(time + decay);
+      };
+
+      createThump(now, 75, 0.12);
+      createThump(now + 0.18, 65, 0.15);
+    } catch (e) {
+      // Ignore
+    }
+  }
 }
 
 export const soundSynthesizer = new SoundSynthesizer();
+

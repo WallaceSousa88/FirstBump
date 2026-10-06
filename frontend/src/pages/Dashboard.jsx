@@ -28,6 +28,11 @@ import {
   Plus,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import DailyAffirmationCard from '../components/DailyAffirmationCard';
+import TrimesterJourneyMap from '../components/TrimesterJourneyMap';
+import RecentMemoriesStack from '../components/RecentMemoriesStack';
+import { fireConfetti, fireHeartBurst, fireSparkleBurst } from '../utils/confetti';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
 
 // Helper para somar/subtrair dias em formato YYYY-MM-DD
 function addDays(dateStr, days) {
@@ -102,6 +107,7 @@ export default function Dashboard() {
   const [weightGain, setWeightGain] = useState(null);
   const [wellnessToday, setWellnessToday] = useState({ waterMl: 0, waterGoalMl: 2500, vitaminsTaken: [] });
   const [totalVitaminsCount, setTotalVitaminsCount] = useState(0);
+  const [diaryEntries, setDiaryEntries] = useState([]);
 
   useEffect(() => {
     const savedDpp = storage.getSetting('dpp') || storage.getSetting('due_date');
@@ -133,6 +139,9 @@ export default function Dashboard() {
 
     const checklists = storage.getChecklists();
     setPendingTasks(checklists.filter((c) => !c.is_completed).slice(0, 3));
+
+    // Carrega dados do diário de bordo para a galeria
+    setDiaryEntries(storage.getDiaryEntries());
 
     // Carrega dados de chutes
     const kicks = storage.getKickSessions();
@@ -179,7 +188,28 @@ export default function Dashboard() {
     const newTotal = (currentLog.waterMl || 0) + 200;
     storage.saveWellnessLog(todayStr, { waterMl: newTotal });
     loadWellnessData();
-    toast.success('Mais 200ml de água registrados! 💧');
+
+    // Feedback auditivo e partículas festivas
+    soundSynthesizer.playPop();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+
+    if (newTotal >= (currentLog.waterGoalMl || 2500)) {
+      fireConfetti({ x: originX, y: originY, count: 50 });
+      soundSynthesizer.playChime();
+      toast.success('🎉 Meta de hidratação diária conquistada com sucesso!');
+    } else {
+      fireSparkleBurst(originX, originY);
+      toast.success('Mais 200ml de água registrados! 💧');
+    }
+  };
+
+  const handleBabyEmojiClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    fireHeartBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    soundSynthesizer.playHeartbeatMini();
+    toast.info(`Semana ${viewedWeek}: Tamanho de ${currentComparison.name} ${currentComparison.emoji} ❤️`);
   };
 
   // Cálculo da Idade Gestacional (Semanas + Dias) e Dias Restantes
@@ -299,6 +329,9 @@ export default function Dashboard() {
           </button>
         )}
       </div>
+
+      {/* Pílula Diária de Amor & Inspiração */}
+      <DailyAffirmationCard />
 
       {/* Modal / Card de Configuração Inicial de Datas */}
       {(!dpp || isEditingDates) && (
@@ -460,7 +493,13 @@ export default function Dashboard() {
 
             <div className="baby-hero-top">
               <div className="baby-fruit-box">
-                <div className="baby-emoji-circle" title={currentComparison.name}>
+                <div
+                  className="baby-emoji-circle"
+                  title={`Clique para sentir o amor! ${currentComparison.name}`}
+                  onClick={handleBabyEmojiClick}
+                  role="button"
+                  tabIndex={0}
+                >
                   {currentComparison.emoji}
                 </div>
 
@@ -618,6 +657,9 @@ export default function Dashboard() {
             </Link>
           </div>
 
+          {/* Mapa da Jornada dos 3 Trimestres */}
+          <TrimesterJourneyMap currentWeek={currentWeek} onSelectWeek={(w) => setViewedWeek(w)} />
+
           {/* BENTO STATS ROW (5 CARDS / STATS GRID) */}
           <div className="bento-stats-grid">
             {/* Card 1: Hidratação Hoje */}
@@ -767,6 +809,9 @@ export default function Dashboard() {
               </Link>
             </div>
           )}
+
+          {/* Galeria de Fotos & Ultrassons Recentes (Polaroid Stack) */}
+          <RecentMemoriesStack diaryEntries={diaryEntries} />
         </>
       )}
 

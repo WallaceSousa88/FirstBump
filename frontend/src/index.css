@@ -3345,6 +3345,311 @@ input, textarea, select {
   transform: scale(0.95);
 }
 
+/* ── Trimester Journey Roadmap ───────────────────────────────────────────── */
+.trimester-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.trimester-pill-badge b {
+  color: var(--accent);
+  margin-left: 4px;
+}
+
+.milestones-track-container {
+  position: relative;
+  padding: 20px 0 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.milestones-track-container::-webkit-scrollbar {
+  display: none;
+}
+
+.milestones-track-line {
+  position: absolute;
+  top: 38px;
+  left: 20px;
+  right: 20px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  z-index: 1;
+}
+
+.milestones-track-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, #ec4899 100%);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.milestones-nodes-wrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 680px;
+  padding: 0 10px;
+}
+
+.milestone-node-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.milestone-node-btn:hover {
+  transform: translateY(-4px) scale(1.08);
+}
+
+.milestone-emoji {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+}
+
+.milestone-node-btn.completed .milestone-emoji {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 12px var(--shadow-glow);
+}
+
+.milestone-node-btn.current .milestone-emoji {
+  border-color: var(--accent);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow-md);
+}
+
+.milestone-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.milestone-week {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.milestone-pulse-halo {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 19px);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+/* ── Polaroid Memories Stack ─────────────────────────────────────────────── */
+.polaroid-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 10px 4px;
+}
+
+.polaroid-card {
+  background: #ffffff;
+  padding: 10px 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+[data-theme="dark"] .polaroid-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.polaroid-card:hover {
+  transform: translateY(-8px) scale(1.05) rotate(0deg) !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.14);
+  z-index: 5;
+}
+
+.polaroid-img-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
+.polaroid-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.polaroid-card:hover .polaroid-img-wrapper img {
+  transform: scale(1.06);
+}
+
+.polaroid-caption {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.polaroid-week {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.polaroid-title {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme="dark"] .polaroid-title {
+  color: #cbd5e1;
+}
+
+/* ── Lightbox Modal ──────────────────────────────────────────────────────── */
+.photo-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
+}
+
+.photo-lightbox-content {
+  position: relative;
+  max-width: 620px;
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.photo-lightbox-img {
+  width: 100%;
+  max-height: 440px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.photo-lightbox-details {
+  padding: 18px 22px;
+}
+
+.photo-lightbox-details h4 {
+  margin: 0 0 6px 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.photo-lightbox-details p {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.photo-lightbox-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.photo-lightbox-close:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.1);
+}
+
+/* ── Micro-animations ────────────────────────────────────────────────────── */
+.spin-anim {
+  animation: spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
 
 
 
