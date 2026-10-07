@@ -189,7 +189,7 @@ input, textarea, select {
 
 .sidebar {
   width: 260px;
-  background-color: var(--surface);
+  background-color: transparent;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -197,6 +197,8 @@ input, textarea, select {
   height: 100vh;
   position: sticky;
   top: 0;
+  overflow-y: auto;
+  z-index: 10;
 }
 
 .sidebar-footer {
@@ -1570,6 +1572,8 @@ input, textarea, select {
     width: 82%;
     max-width: 300px;
     z-index: 1001;
+    background-color: var(--surface);
+    backdrop-filter: blur(20px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     animation: slideInLeft 0.25s ease-out;
   }
