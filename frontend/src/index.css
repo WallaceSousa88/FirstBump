@@ -189,7 +189,7 @@ input, textarea, select {
 
 .sidebar {
   width: 260px;
-  background-color: transparent;
+  background-color: var(--bg-color);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -3138,11 +3138,12 @@ input, textarea, select {
 }
 
 .ambient-orb-2 {
-  bottom: 10%;
-  left: -100px;
-  width: 400px;
-  height: 400px;
-  background: #db2777;
+  bottom: 5%;
+  right: 25%;
+  width: 420px;
+  height: 420px;
+  background: var(--accent);
+  opacity: 0.15;
   animation-duration: 22s;
   animation-delay: -5s;
 }
@@ -3151,6 +3152,7 @@ input, textarea, select {
 [data-color-theme="lavender"] .ambient-orb-2 { background: #7c3aed; }
 [data-color-theme="honey"] .ambient-orb-2 { background: #d97706; }
 [data-color-theme="ocean"] .ambient-orb-2 { background: #0284c7; }
+[data-color-theme="blush"] .ambient-orb-2 { background: #db2777; }
 
 @keyframes float-orb {
   0% { transform: translate(0, 0) scale(1); }

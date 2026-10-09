@@ -249,7 +249,7 @@ function AppContent() {
             justifyContent: 'space-between',
             width: '100%',
             padding: '8px 12px',
-            background: 'var(--surface-hover)',
+            background: 'var(--surface)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius)',
             fontSize: '0.8rem',
