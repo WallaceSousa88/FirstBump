@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Square, Trash2, Clock, Activity, AlertCircle, Info, Sparkles, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Play, Square, Trash2, Clock, Activity, AlertCircle, Info, Sparkles, CheckCircle2, RotateCcw, Heart, Wind } from 'lucide-react';
 import { storage } from '../services/storage';
+import { fireSparkleBurst, fireConfetti } from '../utils/confetti';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
 
 function formatSeconds(totalSeconds) {
   if (totalSeconds === null || totalSeconds === undefined || totalSeconds < 0) return '-';
@@ -48,13 +50,19 @@ export default function Contractions() {
     };
   }, [isActive]);
 
-  const handleStart = () => {
+  const handleStart = (e) => {
     setIsActive(true);
     setElapsedSeconds(0);
     setStartTime(new Date().toISOString());
+    soundSynthesizer.playPop();
+
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
   };
 
-  const handleStop = () => {
+  const handleStop = (e) => {
     if (!isActive) return;
     const now = new Date().toISOString();
     const duration = Math.max(1, elapsedSeconds);
@@ -72,6 +80,12 @@ export default function Contractions() {
     setStartTime(null);
     setNotes('');
     refresh();
+
+    soundSynthesizer.playChime();
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
   };
 
   const handleDelete = (id) => {
@@ -212,6 +226,37 @@ export default function Contractions() {
             </>
           )}
         </button>
+
+        {/* Guia de Respiração e Alívio da Dor em Tempo Real */}
+        {isActive && (
+          <div className="labor-breathing-coach" style={{ margin: '20px 0 10px', width: '100%', maxWidth: '340px' }}>
+            <div
+              className={`breathing-animated-orb ${
+                (elapsedSeconds % 12) < 4
+                  ? 'inhale'
+                  : (elapsedSeconds % 12) < 8
+                  ? 'hold'
+                  : 'exhale'
+              }`}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>
+                  {(elapsedSeconds % 12) < 4
+                    ? 'Inspire pelo Nariz 🌸'
+                    : (elapsedSeconds % 12) < 8
+                    ? 'Mantenha com Calma 🧘'
+                    : 'Solte pela Boca 💨'}
+                </span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, opacity: 0.85 }}>
+                  {4 - ((elapsedSeconds % 12) % 4)}s
+                </span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>
+              Relaxe os ombros, destranque a mandíbula e acompanhe a onda.
+            </p>
+          </div>
+        )}
 
         {/* Intensidade e Notas enquanto cronometra */}
         <div style={{ marginTop: '24px', width: '100%', maxWidth: '360px' }}>

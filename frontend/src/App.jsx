@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { storage } from './services/storage';
 import { ToastProvider, useToast } from './context/ToastContext';
+import { soundSynthesizer } from './utils/soundSynthesizer';
 import CommandPalette from './components/CommandPalette';
 import Dashboard from './pages/Dashboard';
 import Checklists from './pages/Checklists';
@@ -135,6 +136,21 @@ function AppContent() {
     };
   }, [toast]);
 
+  const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+
+  const toggleAmbientSound = () => {
+    if (isAmbientPlaying) {
+      soundSynthesizer.stop();
+      setIsAmbientPlaying(false);
+      toast.info('Sons relaxantes pausados');
+    } else {
+      soundSynthesizer.setVolume(0.5);
+      soundSynthesizer.play('heartbeat');
+      setIsAmbientPlaying(true);
+      toast.info('Sons calmantes do útero ativados em segundo plano 💓');
+    }
+  };
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
@@ -195,6 +211,15 @@ function AppContent() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={toggleAmbientSound}
+            className={`btn-icon ${isAmbientPlaying ? 'pulse-ambient-sound' : ''}`}
+            title={isAmbientPlaying ? 'Pausar som do útero' : 'Tocar batimentos do útero em segundo plano'}
+            style={{ fontSize: '1.05rem', color: isAmbientPlaying ? '#ec4899' : 'inherit' }}
+          >
+            {isAmbientPlaying ? '💓' : '🤍'}
+          </button>
+
           <button
             onClick={() => setCommandPaletteOpen(true)}
             className="btn-icon"
@@ -339,6 +364,45 @@ function AppContent() {
               <Smartphone size={16} /> Instalar no Celular
             </button>
           )}
+
+          {/* Botão de Som Ambiente Relaxante do Útero */}
+          <button
+            className="ambient-sound-toggle-btn"
+            onClick={toggleAmbientSound}
+            title={isAmbientPlaying ? 'Pausar sons relaxantes' : 'Ouvir batimentos do útero em segundo plano'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius)',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              backgroundColor: isAmbientPlaying ? 'rgba(236, 72, 153, 0.15)' : 'var(--surface-hover)',
+              border: isAmbientPlaying ? '1px solid #ec4899' : '1px solid var(--border)',
+              color: isAmbientPlaying ? '#db2777' : 'var(--text-main)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginBottom: '10px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1rem' }}>{isAmbientPlaying ? '💓' : '🎧'}</span>
+              <span>{isAmbientPlaying ? 'Útero Ativo' : 'Som do Útero'}</span>
+            </div>
+            {isAmbientPlaying ? (
+              <div className="mini-equalizer-bars">
+                <span className="eq-bar eq-1" />
+                <span className="eq-bar eq-2" />
+                <span className="eq-bar eq-3" />
+              </div>
+            ) : (
+              <span style={{ fontSize: '0.72rem', padding: '2px 6px', borderRadius: '4px', background: 'var(--border)', color: 'var(--text-muted)' }}>
+                Tocar
+              </span>
+            )}
+          </button>
 
           {/* Botão de Alternar Modo Noturno */}
           <button className="theme-toggle-btn" onClick={toggleTheme} title="Alternar tema claro/escuro">

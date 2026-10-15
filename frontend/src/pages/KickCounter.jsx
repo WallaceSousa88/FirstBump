@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Footprints, Timer, Sparkles, CheckCircle2, RotateCcw, Trash2, Undo2, Info, AlertTriangle, Heart, Clock } from 'lucide-react';
+import { Footprints, Timer, Sparkles, CheckCircle2, RotateCcw, Trash2, Undo2, Info, AlertTriangle, Heart, Clock, Zap } from 'lucide-react';
 import { storage } from '../services/storage';
+import { fireConfetti, fireHeartBurst, fireSparkleBurst } from '../utils/confetti';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
 
 export default function KickCounter() {
   const [sessions, setSessions] = useState(() => storage.getKickSessions());
@@ -10,6 +12,8 @@ export default function KickCounter() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [notes, setNotes] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState(null);
+  const [isRippling, setIsRippling] = useState(false);
+  const [movementType, setMovementType] = useState('chute');
 
   const timerRef = useRef(null);
   const TARGET_KICKS = 10;
@@ -38,7 +42,7 @@ export default function KickCounter() {
   };
 
   // Registrar um novo chute
-  const handleRegisterKick = () => {
+  const handleRegisterKick = (e) => {
     const now = Date.now();
     let start = sessionStartTime;
 
@@ -50,12 +54,26 @@ export default function KickCounter() {
 
     const newKick = {
       id: kicks.length + 1,
+      type: movementType,
       time: new Date(now).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       timestamp: now,
     };
 
     const nextKicks = [...kicks, newKick];
     setKicks(nextKicks);
+
+    // Efeito de onda de ultrassom
+    setIsRippling(true);
+    setTimeout(() => setIsRippling(false), 800);
+
+    // Feedback sonoro e tátil
+    soundSynthesizer.playHeartbeatMini();
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + rect.height / 2;
+      fireHeartBurst(originX, originY);
+    }
 
     // Feedback háptico se disponível no celular
     if ('vibrate' in navigator) {
@@ -65,6 +83,13 @@ export default function KickCounter() {
     // Se completou a meta de 10 chutes
     if (nextKicks.length >= TARGET_KICKS) {
       setIsCompleted(true);
+      soundSynthesizer.playChime();
+      if (e && e.currentTarget) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        fireConfetti({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, count: 85 });
+      } else {
+        fireConfetti({ count: 85 });
+      }
       if ('vibrate' in navigator) {
         navigator.vibrate([100, 50, 150]);
       }
@@ -175,22 +200,74 @@ export default function KickCounter() {
           </span>
         </div>
 
-        {/* Botão Grande de Chute */}
-        <button
-          onClick={handleRegisterKick}
-          disabled={isCompleted}
-          className="kick-main-btn"
-          style={{ opacity: isCompleted ? 0.6 : 1 }}
-          title="Registrar movimento do bebê"
-        >
-          <Footprints size={44} style={{ marginBottom: '4px' }} />
-          <span style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>
-            {kicks.length} / {TARGET_KICKS}
-          </span>
-          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9, marginTop: '4px' }}>
-            {isCompleted ? 'Concluído' : 'Chute'}
-          </span>
-        </button>
+        {/* Seletor de Tipo de Movimento Fetal */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+          {[
+            { id: 'chute', label: 'Chutinho', emoji: '🦶' },
+            { id: 'soluco', label: 'Soluço', emoji: '🫧' },
+            { id: 'cambalhota', label: 'Rolamento', emoji: '🌀' },
+          ].map((type) => (
+            <button
+              key={type.id}
+              type="button"
+              onClick={() => {
+                setMovementType(type.id);
+                soundSynthesizer.playPop();
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '5px 12px',
+                borderRadius: '999px',
+                fontSize: '0.78rem',
+                fontWeight: movementType === type.id ? 700 : 500,
+                border: movementType === type.id ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                backgroundColor: movementType === type.id ? 'var(--accent-soft)' : 'var(--surface)',
+                color: movementType === type.id ? 'var(--accent)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span>{type.emoji}</span>
+              <span>{type.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Botão Grande de Chute com Efeito de Radar Ultrassom */}
+        <div className="kick-button-container" style={{ position: 'relative', display: 'inline-block', margin: '0 auto 16px' }}>
+          {isRippling && (
+            <>
+              <div className="ultrasound-radar-pulse pulse-1" />
+              <div className="ultrasound-radar-pulse pulse-2" />
+            </>
+          )}
+
+          <button
+            onClick={handleRegisterKick}
+            disabled={isCompleted}
+            className={`kick-main-btn ${isRippling ? 'rippling' : ''}`}
+            style={{ opacity: isCompleted ? 0.6 : 1 }}
+            title="Registrar movimento do bebê"
+          >
+            <Footprints size={44} style={{ marginBottom: '4px' }} />
+            <span style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>
+              {kicks.length} / {TARGET_KICKS}
+            </span>
+            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9, marginTop: '4px' }}>
+              {isCompleted ? 'Concluído' : 'Registrar'}
+            </span>
+          </button>
+        </div>
+
+        {/* Indicador de Último Movimento */}
+        {kicks.length > 0 && !isCompleted && (
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <Zap size={14} style={{ color: '#f59e0b' }} />
+            <span>Último registrado: <b>{kicks[kicks.length - 1].time}</b> ({kicks[kicks.length - 1].type || 'chute'})</span>
+          </div>
+        )}
 
         {/* Indicador Visual das 10 Bolinhas */}
         <div className="kick-progress-bar-row">

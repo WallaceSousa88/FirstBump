@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DailyAffirmationCard from '../components/DailyAffirmationCard';
+import MaternalMoodWidget from '../components/MaternalMoodWidget';
 import TrimesterJourneyMap from '../components/TrimesterJourneyMap';
 import RecentMemoriesStack from '../components/RecentMemoriesStack';
 import { fireConfetti, fireHeartBurst, fireSparkleBurst } from '../utils/confetti';
@@ -332,6 +333,9 @@ export default function Dashboard() {
 
       {/* Pílula Diária de Amor & Inspiração */}
       <DailyAffirmationCard />
+
+      {/* Check-in Diário de Humor & Energia Materna */}
+      <MaternalMoodWidget />
 
       {/* Modal / Card de Configuração Inicial de Datas */}
       {(!dpp || isEditingDates) && (

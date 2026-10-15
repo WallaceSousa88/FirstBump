@@ -374,8 +374,14 @@ input, textarea, select {
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.07), var(--shadow-glow);
+  border-color: rgba(var(--accent), 0.25);
   transform: translateY(-2px);
+}
+
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .card-title {
@@ -3654,6 +3660,151 @@ input, textarea, select {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* ── Labor Breathing Coach (Contraction Relaxation) ──────────────────────── */
+.labor-breathing-coach {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.breathing-animated-orb {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: transform 3.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 3.8s ease, background-color 3.8s ease;
+  will-change: transform, box-shadow;
+}
+
+.breathing-animated-orb.inhale {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(59, 130, 246, 0.24));
+  color: #0284c7;
+  border: 1.5px solid #38bdf8;
+  transform: scale(1.08);
+  box-shadow: 0 0 24px rgba(14, 165, 233, 0.35);
+}
+
+.breathing-animated-orb.hold {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.24));
+  color: #d97706;
+  border: 1.5px solid #fbbf24;
+  transform: scale(1.08);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.35);
+}
+
+.breathing-animated-orb.exhale {
+  background: linear-gradient(135deg, rgba(219, 39, 119, 0.14), rgba(168, 85, 247, 0.2));
+  color: var(--accent);
+  border: 1.5px solid rgba(219, 39, 119, 0.35);
+  transform: scale(0.94);
+  box-shadow: 0 0 12px rgba(219, 39, 119, 0.15);
+}
+
+/* ── Ultrasound Radar Pulse (Kick Counter) ───────────────────────────────── */
+.ultrasound-radar-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  height: 180px;
+  margin-top: -90px;
+  margin-left: -90px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  animation: radar-expand 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  z-index: 1;
+}
+
+.ultrasound-radar-pulse.pulse-2 {
+  animation-delay: 0.15s;
+  border-color: #ec4899;
+}
+
+@keyframes radar-expand {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.kick-main-btn.rippling {
+  transform: scale(0.96);
+}
+
+/* ── Maternal Mood Check-in ──────────────────────────────────────────────── */
+.maternal-mood-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.mood-pill-btn:hover {
+  transform: translateY(-2px) scale(1.04) !important;
+}
+
+.mood-pill-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* ── Ambient Sound Button & Dancing Equalizer ───────────────────────────── */
+.pulse-ambient-sound {
+  animation: pulse-ambient 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-ambient {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236, 72, 153, 0.4)); }
+  50% { transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.8)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236, 72, 153, 0.4)); }
+}
+
+.mini-equalizer-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.eq-bar {
+  width: 3px;
+  background-color: #ec4899;
+  border-radius: 999px;
+  animation: equalize 0.8s ease-in-out infinite alternate;
+}
+
+.eq-1 {
+  height: 60%;
+  animation-delay: 0.1s;
+}
+
+.eq-2 {
+  height: 100%;
+  animation-delay: 0.35s;
+}
+
+.eq-3 {
+  height: 40%;
+  animation-delay: 0.2s;
+}
+
+@keyframes equalize {
+  0% { height: 25%; }
+  100% { height: 100%; }
+}
+
+
 
 
 
