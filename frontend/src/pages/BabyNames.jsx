@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Sparkles, Heart, Search, Star, Plus, Trash2, Dices, Baby, CheckCircle2, X, UserCheck, Award, Plane, Briefcase, GraduationCap, Volume2, Bookmark, Check } from 'lucide-react';
+import { Sparkles, Heart, Search, Star, Plus, Trash2, Dices, Baby, CheckCircle2, X, UserCheck, Award, Plane, Briefcase, GraduationCap, Volume2, Bookmark, Check, Flame } from 'lucide-react';
 import { storage } from '../services/storage';
 import { BABY_NAMES } from '../data/babyNames';
+import BabyNameSwiper from '../components/BabyNameSwiper';
 
 const GENDER_BADGES = {
   menina: { label: 'Menina', emoji: '👧', color: '#db2777', bg: '#fdf2f8' },
@@ -259,6 +260,28 @@ export default function BabyNames() {
           }}
         >
           <Sparkles size={16} /> Explorar Nomes ({allAvailableNames.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('swipe')}
+          style={{
+            padding: '8px 18px',
+            borderRadius: '999px',
+            border: '1px solid',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+            backgroundColor: activeTab === 'swipe' ? '#ec4899' : 'transparent',
+            color: activeTab === 'swipe' ? '#fff' : 'var(--text-muted)',
+            borderColor: activeTab === 'swipe' ? '#ec4899' : 'var(--border)',
+            boxShadow: activeTab === 'swipe' ? '0 4px 14px rgba(236, 72, 153, 0.28)' : 'none',
+          }}
+        >
+          <Flame size={16} fill={activeTab === 'swipe' ? '#fff' : 'none'} /> Tinder dos Nomes (Swipe)
         </button>
 
         <button
@@ -959,6 +982,16 @@ export default function BabyNames() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ABA 4: TINDER DOS NOMES (SWIPE) */}
+      {activeTab === 'swipe' && (
+        <BabyNameSwiper
+          allNames={allAvailableNames}
+          favorites={favorites}
+          onToggleFavorite={handleToggleFavorite}
+          onRatingChange={handleRatingChange}
+        />
       )}
 
       {/* Modal para Adicionar Nome Personalizado */}

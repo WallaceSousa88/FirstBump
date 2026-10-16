@@ -32,6 +32,7 @@ import DailyAffirmationCard from '../components/DailyAffirmationCard';
 import MaternalMoodWidget from '../components/MaternalMoodWidget';
 import TrimesterJourneyMap from '../components/TrimesterJourneyMap';
 import RecentMemoriesStack from '../components/RecentMemoriesStack';
+import WeeklySensoryModal from '../components/WeeklySensoryModal';
 import { fireConfetti, fireHeartBurst, fireSparkleBurst } from '../utils/confetti';
 import { soundSynthesizer } from '../utils/soundSynthesizer';
 
@@ -109,6 +110,7 @@ export default function Dashboard() {
   const [wellnessToday, setWellnessToday] = useState({ waterMl: 0, waterGoalMl: 2500, vitaminsTaken: [] });
   const [totalVitaminsCount, setTotalVitaminsCount] = useState(0);
   const [diaryEntries, setDiaryEntries] = useState([]);
+  const [showSensoryModal, setShowSensoryModal] = useState(false);
 
   useEffect(() => {
     const savedDpp = storage.getSetting('dpp') || storage.getSetting('due_date');
@@ -600,11 +602,40 @@ export default function Dashboard() {
 
             {/* Destaque do Desenvolvimento da Semana */}
             <div className="baby-highlight-quote">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, marginBottom: '4px', color: 'var(--primary)' }}>
-                <Sparkles size={16} style={{ color: '#ca8a04' }} />
-                <span>Marco de Desenvolvimento:</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--primary)' }}>
+                  <Sparkles size={16} style={{ color: '#ca8a04' }} />
+                  <span>Marco de Desenvolvimento:</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSensoryModal(true);
+                    soundSynthesizer.playChime();
+                    fireSparkleBurst(window.innerWidth / 2, window.innerHeight / 2);
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 12px',
+                    borderRadius: '999px',
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--accent)',
+                    color: 'var(--accent)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.18s ease',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
+                  className="hover-scale"
+                >
+                  <span>🔬 Raio-X & Sentidos da Semana</span>
+                  <ChevronRight size={13} />
+                </button>
               </div>
-              <div>{babyInfo.highlight}</div>
+              <div style={{ lineHeight: '1.5' }}>{babyInfo.highlight}</div>
             </div>
 
             {/* Barra de Progresso Geral da Gestação */}
@@ -876,6 +907,15 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Modal Interativo de Raio-X & Sentidos da Semana */}
+      {showSensoryModal && (
+        <WeeklySensoryModal
+          week={viewedWeek}
+          babyInfo={babyInfo}
+          onClose={() => setShowSensoryModal(false)}
+        />
+      )}
     </div>
   );
 }

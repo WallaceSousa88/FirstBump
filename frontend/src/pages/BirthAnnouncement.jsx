@@ -23,7 +23,10 @@ import {
   Trash2,
   Layers,
   Wand2,
+  Dices,
 } from 'lucide-react';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
+import { fireConfetti, fireSparkleBurst } from '../utils/confetti';
 
 const SUGGESTED_MESSAGES = [
   'Nosso maior sonho se tornou realidade. Cheguei para encher o mundo de amor e luz! ✨',
@@ -146,6 +149,8 @@ export default function BirthAnnouncement() {
     link.href = canvasRef.current.toDataURL('image/png', 1.0);
     link.click();
 
+    soundSynthesizer.playChime();
+    fireConfetti({ count: 75 });
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 3500);
   };
@@ -153,6 +158,8 @@ export default function BirthAnnouncement() {
   // Compartilhamento via Web Share API ou WhatsApp
   const handleShare = async () => {
     if (!canvasRef.current) return;
+    soundSynthesizer.playPop();
+    fireSparkleBurst(window.innerWidth / 2, window.innerHeight / 2);
 
     const shareText = `🍼 Anúncio de Nascimento do(a) ${cardData.babyName || 'nosso bebê'}! Nasceu com ${cardData.weight || '3.4'}kg e ${cardData.height || '49'}cm de puro amor! ✨`;
 
@@ -184,6 +191,14 @@ export default function BirthAnnouncement() {
     navigator.clipboard?.writeText?.(shareText);
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleRandomMessage = () => {
+    const remaining = SUGGESTED_MESSAGES.filter((m) => m !== cardData.message);
+    const chosen = remaining[Math.floor(Math.random() * remaining.length)] || SUGGESTED_MESSAGES[0];
+    setCardData((prev) => ({ ...prev, message: chosen }));
+    soundSynthesizer.playPop();
+    fireSparkleBurst(window.innerWidth / 2, window.innerHeight / 2);
   };
 
   return (
@@ -226,7 +241,10 @@ export default function BirthAnnouncement() {
               <button
                 key={fmt.id}
                 className={`format-tab-btn ${selectedFormat === fmt.id ? 'active' : ''}`}
-                onClick={() => setSelectedFormat(fmt.id)}
+                onClick={() => {
+                  setSelectedFormat(fmt.id);
+                  soundSynthesizer.playPop();
+                }}
               >
                 {fmt.name}
               </button>
@@ -245,7 +263,10 @@ export default function BirthAnnouncement() {
                 <button
                   key={thm.id}
                   className={`theme-chip-btn ${selectedTheme === thm.id ? 'active' : ''}`}
-                  onClick={() => setSelectedTheme(thm.id)}
+                  onClick={() => {
+                    setSelectedTheme(thm.id);
+                    soundSynthesizer.playPop();
+                  }}
                 >
                   <span
                     style={{
@@ -449,9 +470,34 @@ export default function BirthAnnouncement() {
 
           {/* Mensagem e Frases Sugeridas */}
           <div className="card" style={{ marginBottom: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, fontSize: '1rem', marginBottom: '10px' }}>
-              <Wand2 size={18} style={{ color: '#ca8a04' }} />
-              <span>Frase de Dedicação</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, fontSize: '1rem' }}>
+                <Wand2 size={18} style={{ color: '#ca8a04' }} />
+                <span>Frase de Dedicação</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleRandomMessage}
+                className="btn-icon"
+                title="Sortear outra frase especial"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '4px 12px',
+                  borderRadius: '999px',
+                  backgroundColor: 'var(--surface-hover)',
+                  border: '1px solid var(--border)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--text-main)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Dices size={14} style={{ color: '#ca8a04' }} />
+                <span>Sortear Frase</span>
+              </button>
             </div>
 
             <textarea
@@ -470,7 +516,10 @@ export default function BirthAnnouncement() {
               {SUGGESTED_MESSAGES.map((msg, i) => (
                 <button
                   key={i}
-                  onClick={() => setCardData({ ...cardData, message: msg })}
+                  onClick={() => {
+                    setCardData({ ...cardData, message: msg });
+                    soundSynthesizer.playPop();
+                  }}
                   style={{
                     textAlign: 'left',
                     background: 'var(--surface-hover)',
@@ -504,8 +553,14 @@ export default function BirthAnnouncement() {
             )}
           </div>
 
-          {/* Container do Canvas HD */}
-          <div className="birthcard-canvas-container">
+          {/* Container do Canvas HD com Brilho Ambiente Adaptativo */}
+          <div
+            className="birthcard-canvas-container"
+            style={{
+              boxShadow: `0 24px 60px -15px ${THEMES[selectedTheme]?.borderGold || 'rgba(0,0,0,0.2)'}45, 0 4px 18px rgba(0,0,0,0.06)`,
+              transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
             <canvas ref={canvasRef} className="birthcard-canvas" />
           </div>
 
