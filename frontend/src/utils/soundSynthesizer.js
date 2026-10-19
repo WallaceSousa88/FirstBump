@@ -367,6 +367,57 @@ class SoundSynthesizer {
       // Ignore
     }
   }
+
+  playWaterDrop() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      // Pitch ramp up then snappy decay for realistic droplet "bloop"
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(1150, now + 0.04);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.12);
+
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  playSuccessChord() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const time = now + idx * 0.06;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+
+        gain.gain.setValueAtTime(0.18, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(time);
+        osc.stop(time + 0.65);
+      });
+    } catch (e) {
+      // Ignore
+    }
+  }
 }
 
 export const soundSynthesizer = new SoundSynthesizer();

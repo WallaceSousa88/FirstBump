@@ -47,6 +47,7 @@ import MedicalSummary from './pages/MedicalSummary';
 import WhiteNoise from './pages/WhiteNoise';
 import WellnessTracker from './pages/WellnessTracker';
 import BirthAnnouncement from './pages/BirthAnnouncement';
+import AmbientSoundDock from './components/AmbientSoundDock';
 
 const COLOR_THEMES = [
   { key: 'ocean', label: 'Azul Sereno', emoji: '🌊', color: '#2563eb' },
@@ -137,17 +138,20 @@ function AppContent() {
   }, [toast]);
 
   const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+  const [ambientTrack, setAmbientTrack] = useState('heartbeat');
 
-  const toggleAmbientSound = () => {
-    if (isAmbientPlaying) {
+  const toggleAmbientSound = (customTrack) => {
+    const trackToPlay = customTrack || ambientTrack;
+    if (isAmbientPlaying && !customTrack) {
       soundSynthesizer.stop();
       setIsAmbientPlaying(false);
       toast.info('Sons relaxantes pausados');
     } else {
       soundSynthesizer.setVolume(0.5);
-      soundSynthesizer.play('heartbeat');
+      soundSynthesizer.play(trackToPlay);
+      setAmbientTrack(trackToPlay);
       setIsAmbientPlaying(true);
-      toast.info('Sons calmantes do útero ativados em segundo plano 💓');
+      toast.info('Sons calmantes ativados em segundo plano 💓');
     }
   };
 
@@ -568,6 +572,14 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {/* Mini Player Dock Flutuante para Sons Gestacionais */}
+      <AmbientSoundDock
+        isPlaying={isAmbientPlaying}
+        onTogglePlay={() => toggleAmbientSound()}
+        currentTrack={ambientTrack}
+        onSelectTrack={(track) => toggleAmbientSound(track)}
+      />
     </div>
   );
 }

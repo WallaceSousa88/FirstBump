@@ -20,6 +20,8 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
+import { fireConfetti, fireSparkleBurst } from '../utils/confetti';
 
 const COMMON_SYMPTOMS = [
   { id: 'nausea', label: '🤢 Enjoo / Náusea' },
@@ -128,8 +130,25 @@ export default function WellnessTracker() {
   };
 
   // Funções de Água
-  const handleAddWater = (amount) => {
-    const newTotal = Math.max(0, (currentLog.waterMl || 0) + amount);
+  const handleAddWater = (amount, e) => {
+    const oldTotal = currentLog.waterMl || 0;
+    const goal = currentLog.waterGoalMl || 2500;
+    const newTotal = Math.max(0, oldTotal + amount);
+
+    soundSynthesizer.playWaterDrop();
+
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
+
+    if (oldTotal < goal && newTotal >= goal) {
+      setTimeout(() => {
+        soundSynthesizer.playSuccessChord();
+        fireConfetti({ count: 70 });
+      }, 150);
+    }
+
     updateCurrentLog({ waterMl: newTotal });
   };
 
@@ -146,15 +165,17 @@ export default function WellnessTracker() {
   const handleResetWater = () => {
     if (window.confirm('Deseja zerar a contagem de água deste dia?')) {
       updateCurrentLog({ waterMl: 0 });
+      soundSynthesizer.playPop();
     }
   };
 
   const handleChangeWaterGoal = (goal) => {
     updateCurrentLog({ waterGoalMl: goal });
+    soundSynthesizer.playPop();
   };
 
   // Funções de Vitaminas
-  const handleToggleVitamin = (id) => {
+  const handleToggleVitamin = (id, e) => {
     const currentTaken = currentLog.vitaminsTaken || [];
     const currentTimestamps = { ...(currentLog.vitaminsTimestamps || {}) };
 
@@ -162,11 +183,17 @@ export default function WellnessTracker() {
     if (currentTaken.includes(id)) {
       newTaken = currentTaken.filter((item) => item !== id);
       delete currentTimestamps[id];
+      soundSynthesizer.playPop();
     } else {
       newTaken = [...currentTaken, id];
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       currentTimestamps[id] = timeStr;
+      soundSynthesizer.playChime();
+      if (e && e.currentTarget) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
     }
 
     updateCurrentLog({
@@ -391,7 +418,11 @@ export default function WellnessTracker() {
               <div
                 className="water-fill-level"
                 style={{ height: `${Math.min(100, (waterDrank / waterGoal) * 100)}%` }}
-              />
+              >
+                <div className="water-bubble bubble-1" />
+                <div className="water-bubble bubble-2" />
+                <div className="water-bubble bubble-3" />
+              </div>
               <div className="water-bottle-text">
                 <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>
                   {waterPercent}%
@@ -403,27 +434,50 @@ export default function WellnessTracker() {
             </div>
 
             {/* Status & Restante */}
-            {waterDrank >= waterGoal ? (
-              <div
-                style={{
-                  background: 'rgba(16, 185, 129, 0.12)',
-                  color: '#10b981',
-                  padding: '6px 14px',
-                  borderRadius: '999px',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <CheckCircle2 size={16} /> Meta alcançada hoje! 🎉
-              </div>
-            ) : (
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Faltam <b>{waterRemaining} ml</b> para bater sua meta diária
-              </div>
-            )}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              {waterDrank >= waterGoal ? (
+                <div
+                  style={{
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    color: '#10b981',
+                    padding: '6px 14px',
+                    borderRadius: '999px',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <CheckCircle2 size={16} /> Meta alcançada hoje! 🎉
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Faltam <b>{waterRemaining} ml</b> para bater sua meta diária
+                </div>
+              )}
+
+              {consecutiveWaterDays > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    padding: '4px 12px',
+                    borderRadius: '999px',
+                    backgroundColor: '#fef3c7',
+                    color: '#b45309',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
+                  title={`${consecutiveWaterDays} dias seguidos atingindo a meta de hidratação!`}
+                >
+                  <Flame size={14} style={{ color: '#d97706', fill: '#d97706' }} />
+                  <span>{consecutiveWaterDays} {consecutiveWaterDays === 1 ? 'dia seguido' : 'dias seguidos'} batendo a meta! 🔥</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Botões de Adição Rápida */}
@@ -432,25 +486,25 @@ export default function WellnessTracker() {
               Registrar Consumo:
             </span>
             <div className="water-quick-grid">
-              <button className="water-add-btn" onClick={() => handleAddWater(200)}>
+              <button className="water-add-btn" onClick={(e) => handleAddWater(200, e)}>
                 <span style={{ fontSize: '1.2rem' }}>🥤</span>
                 <span>+200 ml</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Copo</span>
               </button>
 
-              <button className="water-add-btn" onClick={() => handleAddWater(300)}>
+              <button className="water-add-btn" onClick={(e) => handleAddWater(300, e)}>
                 <span style={{ fontSize: '1.2rem' }}>☕</span>
                 <span>+300 ml</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Caneca</span>
               </button>
 
-              <button className="water-add-btn" onClick={() => handleAddWater(500)}>
+              <button className="water-add-btn" onClick={(e) => handleAddWater(500, e)}>
                 <span style={{ fontSize: '1.2rem' }}>🍶</span>
                 <span>+500 ml</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Garrafinha</span>
               </button>
 
-              <button className="water-add-btn" onClick={() => handleAddWater(1000)}>
+              <button className="water-add-btn" onClick={(e) => handleAddWater(1000, e)}>
                 <span style={{ fontSize: '1.2rem' }}>🍼</span>
                 <span>+1000 ml</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>1 Litro</span>
@@ -542,7 +596,7 @@ export default function WellnessTracker() {
                 <div key={vitamin.id} className={`vitamin-card-item ${isTaken ? 'taken' : ''}`}>
                   <button
                     className={`vitamin-checkbox-btn ${isTaken ? 'checked' : ''}`}
-                    onClick={() => handleToggleVitamin(vitamin.id)}
+                    onClick={(e) => handleToggleVitamin(vitamin.id, e)}
                     title={isTaken ? 'Desmarcar como tomada' : 'Marcar como tomada'}
                   >
                     {isTaken ? <Check size={20} strokeWidth={3} /> : <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--border)' }} />}

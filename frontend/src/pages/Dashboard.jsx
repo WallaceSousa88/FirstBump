@@ -273,6 +273,30 @@ export default function Dashboard() {
     return localStorage.getItem('fb_comparison_mode') || 'fruit';
   });
 
+  // 3D Perspective Tilt & Specular Sheen Interativo
+  const [heroTilt, setHeroTilt] = useState({ rx: 0, ry: 0, sx: 50, sy: 50, active: false });
+
+  const handleHeroMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rx = ((y - cy) / cy) * -3.5;
+    const ry = ((x - cx) / cx) * 3.5;
+    setHeroTilt({
+      rx,
+      ry,
+      sx: (x / rect.width) * 100,
+      sy: (y / rect.height) * 100,
+      active: true,
+    });
+  };
+
+  const handleHeroMouseLeave = () => {
+    setHeroTilt({ rx: 0, ry: 0, sx: 50, sy: 50, active: false });
+  };
+
   const handleComparisonModeChange = (mode) => {
     setComparisonMode(mode);
     localStorage.setItem('fb_comparison_mode', mode);
@@ -457,10 +481,34 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* BENTO HERO CARD: Tamanho do Bebê & Semana */}
-          <div className="baby-size-hero">
+          {/* BENTO HERO CARD: Tamanho do Bebê & Semana com 3D Perspective Tilt */}
+          <div
+            className="baby-size-hero"
+            onMouseMove={handleHeroMouseMove}
+            onMouseLeave={handleHeroMouseLeave}
+            style={{
+              transform: `perspective(1000px) rotateX(${heroTilt.rx}deg) rotateY(${heroTilt.ry}deg) scale3d(${heroTilt.active ? 1.008 : 1}, ${heroTilt.active ? 1.008 : 1}, 1)`,
+              transition: heroTilt.active ? 'transform 0.08s ease-out' : 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
+              willChange: 'transform',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Dynamic Specular Sheen Overlay */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                background: `radial-gradient(circle 380px at ${heroTilt.sx}% ${heroTilt.sy}%, rgba(255, 255, 255, 0.16) 0%, transparent 70%)`,
+                opacity: heroTilt.active ? 1 : 0,
+                transition: 'opacity 0.25s ease',
+                zIndex: 1,
+              }}
+            />
+
             {/* Seletor de Universo de Comparação */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px', position: 'relative', zIndex: 2 }}>
               <div className="universe-switcher-bar" role="tablist" aria-label="Seletor de Universo">
                 <button
                   type="button"
@@ -568,6 +616,26 @@ export default function Dashboard() {
                         <span>Idade exata: <b>{currentWeek} sem + {currentDays}d</b></span>
                       </div>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        soundSynthesizer.playHeartbeatMini();
+                        fireHeartBurst(e.clientX, e.clientY);
+                      }}
+                      className="baby-metric-badge heartbeat-badge hover-scale"
+                      style={{
+                        cursor: 'pointer',
+                        border: '1px solid rgba(236, 72, 153, 0.35)',
+                        background: 'rgba(236, 72, 153, 0.08)',
+                        color: '#db2777',
+                      }}
+                      title="Clique para ouvir os batimentos simulados (~140-150 BPM)!"
+                    >
+                      <Heart size={14} className="pulse-heart-mini" style={{ color: '#ec4899', fill: '#ec4899' }} />
+                      <span>Ritmo Cardíaco: <b>~140-150 BPM</b> 🎧</span>
+                    </button>
                   </div>
                 </div>
               </div>
