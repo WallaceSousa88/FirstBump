@@ -333,28 +333,75 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {dpp && (
-          <button
-            onClick={() => {
-              setFormDpp(dpp);
-              setFormDum(dum);
-              setIsEditingDates(true);
-            }}
-            className="btn"
-            style={{
-              border: '1px solid var(--border)',
-              backgroundColor: 'var(--surface)',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            <Edit3 size={15} style={{ color: 'var(--accent)' }} /> Alterar DUM / DPP
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {dpp && daysLeft !== null && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                boxShadow: 'var(--shadow-sm), inset 0 1px 0 0 rgba(255, 255, 255, 0.8)',
+              }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(236, 72, 153, 0.35)',
+                }}
+              >
+                <Heart size={16} fill="#ffffff" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Contagem Regressiva
+                </div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--primary)' }}>
+                  {daysLeft > 0 ? (
+                    <span>Faltam <b>{daysLeft}</b> dias (~{Math.ceil(daysLeft / 7)} sem)</span>
+                  ) : daysLeft === 0 ? (
+                    <span>Hoje é o grande dia! 🎉</span>
+                  ) : (
+                    <span>Seu bebê chegou! 🍼</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {dpp && (
+            <button
+              onClick={() => {
+                setFormDpp(dpp);
+                setFormDum(dum);
+                setIsEditingDates(true);
+              }}
+              className="btn"
+              style={{
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--surface)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <Edit3 size={15} style={{ color: 'var(--accent)' }} /> Alterar DUM / DPP
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Pílula Diária de Amor & Inspiração */}

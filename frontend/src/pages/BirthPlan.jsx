@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ScrollText, Printer, Sparkles, CheckCircle2, FileEdit, Info, Check, ShieldCheck, Heart } from 'lucide-react';
+import { ScrollText, Printer, Sparkles, CheckCircle2, FileEdit, Info, Check, ShieldCheck, Heart, Award, FileCheck } from 'lucide-react';
 import { storage } from '../services/storage';
 import { BIRTH_PLAN_SECTIONS } from '../data/birthPlanOptions';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
+import { fireConfetti, fireSparkleBurst } from '../utils/confetti';
 
 export default function BirthPlan() {
   const [activeTab, setActiveTab] = useState('edit'); // 'edit' | 'preview'
@@ -52,12 +54,15 @@ export default function BirthPlan() {
     };
     storage.saveBirthPlan(planData);
     if (showToast) {
+      soundSynthesizer.playSuccessChord();
+      fireSparkleBurst(window.innerWidth / 2, window.innerHeight / 2);
       setFeedbackMsg('Plano de Parto salvo com sucesso!');
       setTimeout(() => setFeedbackMsg(null), 3000);
     }
   };
 
   const handleToggleOption = (id) => {
+    soundSynthesizer.playPop();
     setSelectedOptions((prev) => ({
       ...prev,
       [id]: !prev[id],
@@ -73,11 +78,14 @@ export default function BirthPlan() {
       });
     });
     setSelectedOptions(defaultOpts);
+    soundSynthesizer.playChime();
+    fireConfetti({ count: 65 });
     setFeedbackMsg('Modelo de Parto Humanizado (OMS) carregado com sucesso!');
     setTimeout(() => setFeedbackMsg(null), 3500);
   };
 
   const handlePrint = () => {
+    soundSynthesizer.playChime();
     handleSave(false);
     window.print();
   };
@@ -336,17 +344,22 @@ export default function BirthPlan() {
             {/* Cabeçalho do Documento */}
             <div className="birthplan-header">
               <div>
-                <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e3a8a', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(30, 58, 138, 0.08)', color: '#1e3a8a', padding: '3px 10px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700, marginBottom: '6px' }}>
+                  <ShieldCheck size={13} /> Diretrizes Humanizadas OMS · Lei Federal nº 11.108/2005
+                </div>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1e3a8a', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Plano de Parto
                 </h1>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
-                  Diretrizes de Parto Humanizado · Em conformidade com a OMS e Lei Federal nº 11.108/2005
+                  Documento de Comunicação e Humanização da Equipe Obstétrica e Pediátrica
                 </p>
               </div>
 
-              <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#64748b' }}>
-                <div>Documento Oficial</div>
-                <div style={{ fontWeight: 600, color: '#1e293b' }}>{new Date().toLocaleDateString('pt-BR')}</div>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#059669', fontSize: '0.75rem', fontWeight: 700 }}>
+                  <FileCheck size={14} /> Documento Oficial
+                </div>
+                <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.8rem' }}>{new Date().toLocaleDateString('pt-BR')}</div>
               </div>
             </div>
 

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Calculator, DollarSign, Gift, CheckCircle2, Plus, Trash2, Edit3, Sparkles, Package, ShoppingBag, TrendingUp, Info } from 'lucide-react';
 import { storage } from '../services/storage';
 import { DIAPER_SIZES, BUDGET_CATEGORIES } from '../data/diaperData';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
+import { fireSparkleBurst } from '../utils/confetti';
 
 export default function DiaperBudget() {
   const [activeTab, setActiveTab] = useState('diapers'); // 'diapers' | 'budget'
@@ -41,6 +43,7 @@ export default function DiaperBudget() {
     const updated = { ...inventory, [sizeKey]: nextVal };
     setInventory(updated);
     storage.saveDiaperInventory(updated);
+    soundSynthesizer.playPop();
   };
 
   // Salvar meta de orçamento
@@ -51,6 +54,7 @@ export default function DiaperBudget() {
       setBudgetLimit(val);
       storage.setSetting('budget_limit', val);
       setIsEditingBudget(false);
+      soundSynthesizer.playChime();
       showNotification('Meta de orçamento atualizada com sucesso!');
     }
   };
@@ -76,12 +80,18 @@ export default function DiaperBudget() {
     setBudgetItems(storage.getBudgetItems());
     setItemName('');
     setItemValue('');
+    soundSynthesizer.playChime();
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
     showNotification('Item adicionado ao orçamento!');
   };
 
   const handleDeleteBudgetItem = (id) => {
     storage.deleteBudgetItem(id);
     setBudgetItems(storage.getBudgetItems());
+    soundSynthesizer.playPop();
   };
 
   // Cálculos de Fraldas

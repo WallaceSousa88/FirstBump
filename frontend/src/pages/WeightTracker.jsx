@@ -3,6 +3,8 @@ import { Scale, TrendingUp, Plus, Trash2, Info, Sparkles, CheckCircle2, AlertCir
 import { storage } from '../services/storage';
 import { calculateBMI, getBMICategoryKey, BMI_CATEGORIES, getExpectedGainForWeek, generateReferenceCurve } from '../utils/gestationalWeight';
 import WeightChart from '../components/WeightChart';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
+import { fireSparkleBurst, fireConfetti } from '../utils/confetti';
 
 export default function WeightTracker() {
   const [weights, setWeights] = useState(() => storage.getWeights());
@@ -64,6 +66,14 @@ export default function WeightTracker() {
       notes: notes.trim() || null,
     });
 
+    soundSynthesizer.playChime();
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    } else {
+      fireSparkleBurst(window.innerWidth / 2, window.innerHeight / 2);
+    }
+
     setWeightValue('');
     setNotes('');
     refresh();
@@ -71,6 +81,7 @@ export default function WeightTracker() {
 
   const handleDelete = (id) => {
     storage.deleteWeight(id);
+    soundSynthesizer.playPop();
     refresh();
   };
 
