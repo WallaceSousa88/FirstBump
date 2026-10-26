@@ -418,6 +418,125 @@ class SoundSynthesizer {
       // Ignore
     }
   }
+
+  // ── Som Mecânico Realista de Câmera Fotográfica (Álbum / Polaroid) ───────────
+  playCameraShutter() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+
+      // 1. Primeiro clique mecânico (abertura do obturador)
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.type = 'triangle';
+      osc1.frequency.setValueAtTime(1400, now);
+      osc1.frequency.exponentialRampToValueAtTime(300, now + 0.035);
+
+      gain1.gain.setValueAtTime(0.35, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+      osc1.connect(gain1);
+      gain1.connect(this.masterGain);
+      osc1.start(now);
+      osc1.stop(now + 0.04);
+
+      // 2. Ruído de cortina de obturador (noise burst sutil)
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.05);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * 0.25;
+      }
+      const whiteNoise = this.ctx.createBufferSource();
+      whiteNoise.buffer = buffer;
+      const noiseFilter = this.ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(2200, now + 0.02);
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.15, now + 0.02);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+      whiteNoise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.masterGain);
+      whiteNoise.start(now + 0.02);
+
+      // 3. Segundo clique (fechamento do obturador)
+      const osc2 = this.ctx.createOscillator();
+      const gain2 = this.ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(1100, now + 0.08);
+      osc2.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+
+      gain2.gain.setValueAtTime(0.4, now + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+      osc2.connect(gain2);
+      gain2.connect(this.masterGain);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.13);
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  // ── Tom Zen / Taça Tibetana Harmônica (Guia de Respiração no Parto) ──────────
+  playZenTone(freq = 432) {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const oscOver = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      oscOver.type = 'sine';
+      oscOver.frequency.setValueAtTime(freq * 2.01, now); // Overtone sutil
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.15); // Ataque suave
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); // Ressonância longa
+
+      osc.connect(gain);
+      oscOver.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      oscOver.start(now);
+      osc.stop(now + 1.85);
+      oscOver.stop(now + 1.85);
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  // ── Feedback Snappy de Cópia / Clipboard ─────────────────────────────────────
+  playCopyChime() {
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const freqs = [659.25, 880.0]; // E5, A5
+      freqs.forEach((freq, idx) => {
+        const time = now + idx * 0.07;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+
+        gain.gain.setValueAtTime(0.18, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(time);
+        osc.stop(time + 0.13);
+      });
+    } catch (e) {
+      // Ignore
+    }
+  }
 }
 
 export const soundSynthesizer = new SoundSynthesizer();

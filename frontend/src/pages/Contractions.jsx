@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Square, Trash2, Clock, Activity, AlertCircle, Info, Sparkles, CheckCircle2, RotateCcw, Heart, Wind } from 'lucide-react';
+import { Play, Square, Trash2, Clock, Activity, AlertCircle, Info, Sparkles, CheckCircle2, RotateCcw, Heart, Wind, Volume2, VolumeX, Phone } from 'lucide-react';
 import { storage } from '../services/storage';
 import { fireSparkleBurst, fireConfetti } from '../utils/confetti';
 import { soundSynthesizer } from '../utils/soundSynthesizer';
@@ -19,9 +19,9 @@ function formatTimerDigits(totalSeconds) {
 }
 
 const INTENSITY_CONFIG = {
-  leve: { label: 'Leve', color: '#16a34a', bg: '#dcfce7' },
-  moderada: { label: 'Moderada', color: '#ca8a04', bg: '#fef9c3' },
-  intensa: { label: 'Intensa', color: '#dc2626', bg: '#fee2e2' },
+  leve: { label: 'Leve', color: '#16a34a', bg: '#dcfce7', glow: 'rgba(22, 163, 74, 0.35)' },
+  moderada: { label: 'Moderada', color: '#ca8a04', bg: '#fef9c3', glow: 'rgba(202, 138, 4, 0.35)' },
+  intensa: { label: 'Intensa', color: '#dc2626', bg: '#fee2e2', glow: 'rgba(220, 38, 38, 0.45)' },
 };
 
 export default function Contractions() {
@@ -31,6 +31,10 @@ export default function Contractions() {
   const [intensity, setIntensity] = useState('moderada');
   const [notes, setNotes] = useState('');
   const [startTime, setStartTime] = useState(null);
+  const [zenAudioEnabled, setZenAudioEnabled] = useState(true);
+
+  // Informações médicas para ligações de emergência
+  const [medicalInfo] = useState(() => storage.getMedicalInfo() || {});
 
   const timerRef = useRef(null);
 
@@ -40,7 +44,23 @@ export default function Contractions() {
   useEffect(() => {
     if (isActive) {
       timerRef.current = setInterval(() => {
-        setElapsedSeconds((prev) => prev + 1);
+        setElapsedSeconds((prev) => {
+          const nextSec = prev + 1;
+
+          // Se o áudio zen estiver ativado, toca sino nas transições do ciclo de respiração (12s)
+          if (zenAudioEnabled) {
+            const cycleSec = nextSec % 12;
+            if (cycleSec === 0) {
+              soundSynthesizer.playZenTone(432); // Inspire (A 432Hz)
+            } else if (cycleSec === 4) {
+              soundSynthesizer.playZenTone(480); // Mantenha
+            } else if (cycleSec === 8) {
+              soundSynthesizer.playZenTone(528); // Solte (Solfeggio 528Hz)
+            }
+          }
+
+          return nextSec;
+        });
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -48,13 +68,17 @@ export default function Contractions() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive]);
+  }, [isActive, zenAudioEnabled]);
 
   const handleStart = (e) => {
     setIsActive(true);
     setElapsedSeconds(0);
     setStartTime(new Date().toISOString());
-    soundSynthesizer.playPop();
+    soundSynthesizer.playHeartbeatMini();
+
+    if (zenAudioEnabled) {
+      soundSynthesizer.playZenTone(432);
+    }
 
     if (e && e.currentTarget) {
       const rect = e.currentTarget.getBoundingClientRect();
@@ -90,20 +114,20 @@ export default function Contractions() {
 
   const handleDelete = (id) => {
     storage.deleteContraction(id);
+    soundSynthesizer.playPop();
     refresh();
   };
 
   const handleClearAll = () => {
     if (window.confirm('Tem certeza que deseja apagar todo o histórico de contrações desta sessão?')) {
       storage.clearContractions();
+      soundSynthesizer.playPop();
       refresh();
     }
   };
 
   // Calcular intervalos entre contrações (do início de uma ao início da seguinte)
-  // Como a lista está ordenada do mais recente para o mais antigo:
   const contractionsWithIntervals = contractions.map((item, index) => {
-    // O próximo item no array é a contração ANTERIOR no tempo
     const previousTime = contractions[index + 1];
     let intervalSeconds = null;
 
@@ -118,7 +142,7 @@ export default function Contractions() {
     };
   });
 
-  // Estatísticas das últimas contrações (últimas 5 ou última 1 hora)
+  // Estatísticas das últimas contrações (últimas 6)
   const recentContractions = contractionsWithIntervals.slice(0, 6);
   const avgDuration = recentContractions.length > 0
     ? Math.round(recentContractions.reduce((acc, c) => acc + c.durationSeconds, 0) / recentContractions.length)
@@ -139,9 +163,9 @@ export default function Contractions() {
     if (avgInterval !== null && avgInterval <= 300 && avgDuration >= 45) {
       statusBanner = {
         type: 'alert',
-        title: '🚨 Hora de ir para a Maternidade! (Regra 5-1-1)',
+        title: '🚨 Hora de ir para a Maternidade! (Regra 5-1-1 Atingida)',
         message:
-          'Suas contrações estão vindo a cada 5 minutos (ou menos) e durando cerca de 1 minuto. Entre em contato com seu obstetra/equipe médica e dirija-se à maternidade!',
+          'Suas contrações estão vindo a cada 5 minutos (ou menos) e durando cerca de 1 minuto. Entre em contato com seu obstetra/equipe médica e dirija-se com tranquilidade à maternidade!',
       };
     } else if (avgInterval !== null && avgInterval <= 600) {
       statusBanner = {
@@ -160,28 +184,60 @@ export default function Contractions() {
     }
   }
 
+  // Progresso relativo na curva de contração típica (~60s)
+  const waveProgress = Math.min(1, elapsedSeconds / 60);
+  const waveX = Math.round(20 + waveProgress * 280);
+  // Curva de sino (Gaussian bell curve approximation)
+  const wavePeakHeight = Math.sin(Math.min(Math.PI, waveProgress * Math.PI));
+  const waveY = Math.round(65 - wavePeakHeight * 48);
+
+  const currentIntensity = INTENSITY_CONFIG[intensity] || INTENSITY_CONFIG.moderada;
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
           <h1 className="page-title" style={{ marginBottom: '6px' }}>Cronômetro de Contrações</h1>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>
-            Monitore a duração e o intervalo das contrações para saber o momento exato de ir para a maternidade.
+            Monitore a duração e o intervalo das contrações em tempo real com guia de respiração e avaliação da Regra 5-1-1.
           </p>
         </div>
 
-        {contractions.length > 0 && (
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
-            onClick={handleClearAll}
+            onClick={() => {
+              setZenAudioEnabled(!zenAudioEnabled);
+              soundSynthesizer.playPop();
+            }}
             className="btn"
-            style={{ border: '1px solid var(--border)', fontSize: '0.85rem', color: 'var(--text-muted)' }}
+            style={{
+              border: `1.5px solid ${zenAudioEnabled ? 'var(--accent)' : 'var(--border)'}`,
+              background: zenAudioEnabled ? 'var(--accent-soft)' : 'var(--surface)',
+              color: zenAudioEnabled ? 'var(--accent)' : 'var(--text-muted)',
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+            title="Sino harmônico zen para guiar inspiração e expiração sem olhar para a tela"
           >
-            <RotateCcw size={14} /> Limpar Sessão
+            {zenAudioEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            {zenAudioEnabled ? 'Áudio Zen Ativado' : 'Áudio Mudo'}
           </button>
-        )}
+
+          {contractions.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="btn"
+              style={{ border: '1px solid var(--border)', fontSize: '0.85rem', color: 'var(--text-muted)' }}
+            >
+              <RotateCcw size={14} /> Limpar Sessão
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Banner de Recomendação Médica */}
+      {/* Banner de Recomendação Médica com Ações de Chamada de Emergência */}
       {statusBanner && (
         <div
           className={`hospital-banner ${
@@ -193,11 +249,37 @@ export default function Contractions() {
           }`}
         >
           <AlertCircle size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div>
+          <div style={{ flex: 1 }}>
             <strong style={{ fontSize: '1.05rem', display: 'block', marginBottom: '4px' }}>
               {statusBanner.title}
             </strong>
-            <span style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>{statusBanner.message}</span>
+            <span style={{ fontSize: '0.9rem', lineHeight: '1.5', display: 'block', marginBottom: statusBanner.type === 'alert' ? '12px' : '0' }}>
+              {statusBanner.message}
+            </span>
+
+            {/* Ações de Chamada de Emergência na Maternidade */}
+            {statusBanner.type === 'alert' && (
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '8px' }}>
+                {medicalInfo.doctorPhone && (
+                  <a
+                    href={`tel:${medicalInfo.doctorPhone}`}
+                    className="btn"
+                    style={{ background: '#ffffff', color: '#dc2626', fontWeight: 700, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
+                  >
+                    <Phone size={15} /> Ligar p/ Obstetra ({medicalInfo.doctorPhone})
+                  </a>
+                )}
+                {medicalInfo.hospitalPhone && (
+                  <a
+                    href={`tel:${medicalInfo.hospitalPhone}`}
+                    className="btn"
+                    style={{ background: '#dc2626', color: '#ffffff', fontWeight: 700, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                  >
+                    <Phone size={15} /> Ligar p/ Pronto-Socorro Maternidade
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -205,14 +287,75 @@ export default function Contractions() {
       {/* Card Principal do Cronômetro */}
       <div className="card timer-hero-card">
         <div style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-          {isActive ? 'Contração em Andamento' : 'Pronto para Cronometrar'}
+          {isActive ? 'Contração Uterina em Andamento' : 'Pronto para Cronometrar'}
         </div>
 
-        <div className="timer-digits">{formatTimerDigits(elapsedSeconds)}</div>
+        <div className="timer-digits" style={{ textShadow: isActive ? `0 0 20px ${currentIntensity.glow}` : 'none' }}>
+          {formatTimerDigits(elapsedSeconds)}
+        </div>
+
+        {/* Visualizador de Onda de Contração Uterina em Tempo Real */}
+        {isActive && (
+          <div style={{ width: '100%', maxWidth: '340px', margin: '4px 0 16px' }}>
+            <svg viewBox="0 0 320 80" style={{ width: '100%', height: '70px', overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="activeContractionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="50%" stopColor={currentIntensity.color} />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+                <filter id="waveGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Linha de base da onda uterina */}
+              <path
+                d="M 20 65 Q 90 65 130 35 Q 160 15 190 35 Q 230 65 300 65"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="2.5"
+                strokeDasharray="4 4"
+              />
+
+              {/* Onda da Contração */}
+              <path
+                d="M 20 65 Q 90 65 130 35 Q 160 15 190 35 Q 230 65 300 65"
+                fill="none"
+                stroke="url(#activeContractionGradient)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                filter="url(#waveGlow)"
+              />
+
+              {/* Marcador dinâmico de tempo na onda */}
+              <circle
+                cx={waveX}
+                cy={waveY}
+                r="6"
+                fill={currentIntensity.color}
+                stroke="#ffffff"
+                strokeWidth="2"
+                style={{ filter: `drop-shadow(0 0 6px ${currentIntensity.color})` }}
+              />
+
+              <text x="20" y="78" fill="var(--text-muted)" fontSize="9" fontWeight="600">Incremento</text>
+              <text x="140" y="10" fill={currentIntensity.color} fontSize="10" fontWeight="700" textAnchor="middle">Ápice (Pico)</text>
+              <text x="300" y="78" fill="var(--text-muted)" fontSize="9" fontWeight="600" textAnchor="end">Alívio</text>
+            </svg>
+          </div>
+        )}
 
         <button
           onClick={isActive ? handleStop : handleStart}
           className={`timer-button ${isActive ? 'timer-button-active' : 'timer-button-idle'}`}
+          style={{
+            boxShadow: isActive ? `0 0 35px ${currentIntensity.glow}` : '0 10px 25px rgba(219, 39, 119, 0.3)',
+          }}
         >
           {isActive ? (
             <>
@@ -253,7 +396,7 @@ export default function Contractions() {
               </div>
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>
-              Relaxe os ombros, destranque a mandíbula e acompanhe a onda.
+              Relaxe os ombros, solte a mandíbula e flua com a onda uterina.
             </p>
           </div>
         )}
@@ -269,7 +412,10 @@ export default function Contractions() {
               <button
                 key={key}
                 type="button"
-                onClick={() => setIntensity(key)}
+                onClick={() => {
+                  setIntensity(key);
+                  soundSynthesizer.playPop();
+                }}
                 style={{
                   flex: 1,
                   padding: '6px 10px',
@@ -290,7 +436,7 @@ export default function Contractions() {
 
           <input
             className="form-input"
-            placeholder="Observações (ex: dor nas costas, perda de líquido...)"
+            placeholder="Observações (ex: dor lombar, pressão pélvica...)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             style={{ fontSize: '0.85rem', textAlign: 'center' }}
@@ -419,7 +565,7 @@ export default function Contractions() {
       </div>
 
       {/* Guia Educativo sobre a Regra 5-1-1 */}
-      <div className="card" style={{ backgroundColor: '#f8fafc' }}>
+      <div className="card" style={{ backgroundColor: 'var(--surface)' }}>
         <div className="flex-row" style={{ marginBottom: '12px', color: 'var(--primary)' }}>
           <Info size={20} />
           <h3 className="card-title" style={{ margin: 0, fontSize: '1rem' }}>Como funciona a Regra 5-1-1?</h3>
