@@ -1,25 +1,34 @@
-import { useState } from 'react';
-import { ListChecks, Sparkles, Plus, Trash2, X, CheckCircle2, Download, PackageOpen, Filter } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ListChecks, Sparkles, Plus, Trash2, X, CheckCircle2, Download, PackageOpen, Filter, Printer, Search, Luggage, Check, AlertCircle } from 'lucide-react';
 import { storage } from '../services/storage';
 import { CHECKLIST_TEMPLATES } from '../data/checklistTemplates';
 import { fireConfetti, fireSparkleBurst } from '../utils/confetti';
 import { soundSynthesizer } from '../utils/soundSynthesizer';
 
 const CATEGORY_MAP = {
-  maternidade_bebe: { label: 'Mala do Bebê', emoji: '🍼' },
-  maternidade_mae: { label: 'Mala da Mãe', emoji: '🤰' },
-  maternidade_acompanhante: { label: 'Mala do Acompanhante', emoji: '🎒' },
-  documentos: { label: 'Documentos da Maternidade', emoji: '📑' },
-  enxoval: { label: 'Enxoval & Cuidados', emoji: '🧸' },
-  quarto: { label: 'Quarto & Móveis', emoji: '🛏️' },
-  outros: { label: 'Outros Itens', emoji: '📝' },
+  maternidade_bebe: { label: 'Mala do Bebê', emoji: '🍼', color: '#db2777' },
+  maternidade_mae: { label: 'Mala da Mãe', emoji: '🤰', color: '#9333ea' },
+  maternidade_acompanhante: { label: 'Mala do Acompanhante', emoji: '🎒', color: '#2563eb' },
+  documentos: { label: 'Documentos da Maternidade', emoji: '📑', color: '#ca8a04' },
+  enxoval: { label: 'Enxoval & Cuidados', emoji: '🧸', color: '#16a34a' },
+  quarto: { label: 'Quarto & Móveis', emoji: '🛏️', color: '#0891b2' },
+  outros: { label: 'Outros Itens', emoji: '📝', color: '#64748b' },
 };
+
+// 4 Malas Principais de Parto para o Dashboard Interativo
+const CORE_SUITCASES = [
+  { key: 'maternidade_bebe', label: 'Mala do Bebê', emoji: '🍼' },
+  { key: 'maternidade_mae', label: 'Mala da Mãe', emoji: '🤰' },
+  { key: 'maternidade_acompanhante', label: 'Acompanhante', emoji: '🎒' },
+  { key: 'documentos', label: 'Documentos', emoji: '📑' },
+];
 
 export default function Checklists() {
   const [items, setItems] = useState(() => storage.getChecklists());
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('maternidade_bebe');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
@@ -37,9 +46,13 @@ export default function Checklists() {
     setTitle('');
     refresh();
     soundSynthesizer.playPop();
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
   };
 
-  const handleToggle = (e, id, currentStatus) => {
+  const handleToggle = (e, id, currentStatus, itemCategory) => {
     const newStatus = !currentStatus;
     storage.updateChecklistItem(id, { is_completed: newStatus });
     refresh();
@@ -50,6 +63,15 @@ export default function Checklists() {
         const rect = e.currentTarget.getBoundingClientRect();
         fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
       }
+
+      // Verifica se completou a mala atual
+      const updatedList = storage.getChecklists();
+      const catItems = updatedList.filter((i) => i.category === itemCategory);
+      if (catItems.length > 0 && catItems.every((i) => i.is_completed)) {
+        soundSynthesizer.playSuccessChord();
+        fireConfetti({ count: 60 });
+        showNotification(`🎉 Incrível! A categoria "${CATEGORY_MAP[itemCategory]?.label || itemCategory}" está 100% pronta!`);
+      }
     } else {
       soundSynthesizer.playPop();
     }
@@ -57,6 +79,7 @@ export default function Checklists() {
 
   const handleDelete = (id) => {
     storage.deleteChecklistItem(id);
+    soundSynthesizer.playPop();
     refresh();
   };
 
@@ -66,6 +89,7 @@ export default function Checklists() {
     if (window.confirm(`Deseja remover os ${completedCount} itens já concluídos da lista?`)) {
       items.filter((i) => i.is_completed).forEach((i) => storage.deleteChecklistItem(i.id));
       refresh();
+      soundSynthesizer.playPop();
       showNotification(`${completedCount} itens concluídos foram removidos!`);
     }
   };
@@ -76,7 +100,6 @@ export default function Checklists() {
     const currentList = storage.getChecklists();
 
     template.items.forEach((itemTitle) => {
-      // Evita duplicar itens idênticos na mesma categoria
       const alreadyExists = currentList.some(
         (existing) =>
           existing.category === template.category &&
@@ -94,6 +117,8 @@ export default function Checklists() {
     });
 
     refresh();
+    soundSynthesizer.playSuccessChord();
+    fireConfetti({ count: 45 });
     showNotification(`🎉 ${addedCount} novos itens adicionados à "${template.title}"!`);
   };
 
@@ -123,15 +148,30 @@ export default function Checklists() {
 
     refresh();
     setShowTemplateModal(false);
+    soundSynthesizer.playSuccessChord();
+    fireConfetti({ count: 80 });
     showNotification(`🚀 Pacote Completo Carregado! ${totalAdded} itens foram adicionados ao seu checklist.`);
   };
 
-  // Itens filtrados
-  const filteredItems = selectedFilter === 'all'
-    ? items
-    : items.filter((i) => i.category === selectedFilter);
+  const handlePrint = () => {
+    soundSynthesizer.playChime();
+    window.print();
+  };
 
-  // Categorias que possuem itens no momento
+  // Itens filtrados com suporte à busca em tempo real
+  const filteredItems = useMemo(() => {
+    let list = items;
+    if (selectedFilter !== 'all') {
+      list = list.filter((i) => i.category === selectedFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((i) => i.title.toLowerCase().includes(q));
+    }
+    return list;
+  }, [items, selectedFilter, searchQuery]);
+
+  // Categorias presentes
   const presentCategories = Array.from(new Set(items.map((i) => i.category)));
 
   const completedCount = items.filter((i) => i.is_completed).length;
@@ -140,26 +180,43 @@ export default function Checklists() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+      <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
         <div>
-          <h1 className="page-title" style={{ marginBottom: '6px' }}>Checklists do Bebê</h1>
+          <h1 className="page-title" style={{ marginBottom: '6px' }}>Checklists do Bebê & Malas de Maternidade</h1>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>
-            Organize malas de maternidade, enxoval e preparativos essenciais sem esquecer nada.
+            Planeje os preparativos para o parto, documentos e enxoval sem esquecer nenhum detalhe essencial.
           </p>
         </div>
 
-        <button
-          onClick={() => setShowTemplateModal(true)}
-          className="btn btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Sparkles size={16} /> Modelos Prontos (1-Clique)
-        </button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              setShowTemplateModal(true);
+              soundSynthesizer.playPop();
+            }}
+            className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+          >
+            <Sparkles size={16} /> Modelos Prontos (1-Clique)
+          </button>
+
+          {items.length > 0 && (
+            <button
+              onClick={handlePrint}
+              className="btn"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}
+              title="Imprimir folha de checklist para colar na mala"
+            >
+              <Printer size={16} /> Imprimir Checklist
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Notificação Toast de feedback */}
       {feedbackMsg && (
         <div
+          className="no-print"
           style={{
             backgroundColor: '#dcfce7',
             color: '#15803d',
@@ -171,6 +228,7 @@ export default function Checklists() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
+            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.1)',
           }}
         >
           <CheckCircle2 size={18} />
@@ -178,15 +236,65 @@ export default function Checklists() {
         </div>
       )}
 
+      {/* PAINEL INTERATIVO DE MALAS DA MATERNIDADE (Suitcase Dashboard) */}
+      {items.length > 0 && (
+        <div className="suitcase-cards-grid no-print">
+          {CORE_SUITCASES.map((bag) => {
+            const bagItems = items.filter((i) => i.category === bag.key);
+            const bagTotal = bagItems.length;
+            const bagDone = bagItems.filter((i) => i.is_completed).length;
+            const bagPct = bagTotal > 0 ? Math.round((bagDone / bagTotal) * 100) : 0;
+            const isComplete = bagTotal > 0 && bagDone === bagTotal;
+            const isSelected = selectedFilter === bag.key;
+
+            return (
+              <div
+                key={bag.key}
+                onClick={() => {
+                  setSelectedFilter(isSelected ? 'all' : bag.key);
+                  soundSynthesizer.playPop();
+                }}
+                className={`suitcase-card ${isSelected ? 'suitcase-active' : ''} ${isComplete ? 'suitcase-complete' : ''}`}
+                title={`Clique para filtrar itens de: ${bag.label}`}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div className="suitcase-emoji-circle">{bag.emoji}</div>
+                    <span className={`suitcase-status-pill ${isComplete ? 'suitcase-pill-complete' : 'suitcase-pill-progress'}`}>
+                      {bagTotal === 0 ? 'Não iniciada' : isComplete ? '✓ Pronta!' : `${bagPct}%`}
+                    </span>
+                  </div>
+
+                  <h3 className="suitcase-name">{bag.label}</h3>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    {bagTotal === 0 ? 'Sem itens' : `${bagDone} de ${bagTotal} embalados`}
+                  </div>
+                </div>
+
+                <div className="progress-container" style={{ height: '5px', margin: 0 }}>
+                  <div
+                    className="progress-bar"
+                    style={{
+                      width: `${bagPct}%`,
+                      backgroundColor: isComplete ? '#10b981' : 'var(--accent)',
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Banner de Boas-vindas para listas vazias */}
       {items.length === 0 && (
-        <div className="template-banner">
+        <div className="template-banner no-print">
           <div>
             <h3 style={{ margin: '0 0 6px', fontSize: '1.15rem', color: 'var(--primary)', fontWeight: 700 }}>
-              💡 Quer economizar horas de pesquisa?
+              💡 Quer economizar horas de pesquisa e estresse?
             </h3>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)', maxWidth: '560px', lineHeight: '1.5' }}>
-              Carregue nosso pacote recomendado por obstetras e mães experientes: malas de maternidade (bebê, mãe e acompanhante), documentos e enxoval essencial.
+              Carregue o checklist oficial recomendado por obstetras e mães experientes: malas de maternidade (bebê, mãe e acompanhante), documentos e enxoval essencial.
             </p>
           </div>
 
@@ -194,7 +302,7 @@ export default function Checklists() {
             <button
               onClick={handleLoadAllTemplates}
               className="btn btn-primary"
-              style={{ fontWeight: 600 }}
+              style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <PackageOpen size={18} /> Carregar Tudo com 1 Clique
             </button>
@@ -211,12 +319,12 @@ export default function Checklists() {
 
       {/* Barra de Progresso Geral */}
       {totalCount > 0 && (
-        <div className="card" style={{ padding: '16px 20px', marginBottom: '24px' }}>
+        <div className="card no-print" style={{ padding: '16px 20px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '8px' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>
-              Progresso Geral: <b>{completedCount}</b> de <b>{totalCount}</b> tarefas concluídas
+              Progresso Geral dos Preparativos: <b>{completedCount}</b> de <b>{totalCount}</b> tarefas concluídas
             </span>
-            <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.95rem' }}>
+            <span style={{ fontWeight: 700, color: overallPercentage === 100 ? '#10b981' : 'var(--accent)', fontSize: '0.95rem' }}>
               {overallPercentage}%
             </span>
           </div>
@@ -226,13 +334,17 @@ export default function Checklists() {
               className="progress-bar"
               style={{
                 width: `${overallPercentage}%`,
-                backgroundColor: overallPercentage === 100 ? 'var(--success)' : 'var(--accent)',
+                backgroundColor: overallPercentage === 100 ? '#10b981' : 'var(--accent)',
               }}
-            ></div>
+            />
           </div>
 
-          {completedCount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              💡 Dica Obstétrica: Mantenha as malas 100% fechadas no carro ou no quarto a partir da <b>35ª semana</b>.
+            </span>
+
+            {completedCount > 0 && (
               <button
                 onClick={handleClearCompleted}
                 style={{
@@ -249,20 +361,45 @@ export default function Checklists() {
               >
                 <Trash2 size={13} /> Limpar itens concluídos ({completedCount})
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
-      {/* Formulário para Adicionar Item Personalizado */}
-      <div className="card">
-        <h3 className="card-title" style={{ fontSize: '1rem', marginBottom: '12px' }}>Adicionar Item Personalizado</h3>
+      {/* Busca em Tempo Real e Formulário de Adicionar (no-print) */}
+      <div className="card no-print" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+          <h3 className="card-title" style={{ fontSize: '1rem', margin: 0 }}>Adicionar Item Personalizado</h3>
+
+          {/* Campo de Busca Rápida */}
+          {items.length > 5 && (
+            <div style={{ position: 'relative', width: '100%', maxWidth: '260px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input
+                className="form-input"
+                style={{ paddingLeft: '32px', fontSize: '0.85rem', padding: '6px 12px 6px 32px' }}
+                placeholder="Buscar item na lista..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleAdd} className="flex-row" style={{ alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
           <div className="form-group" style={{ flex: '2 1 240px', marginBottom: 0 }}>
             <label className="form-label">Nome do Item / Tarefa</label>
             <input
               className="form-input"
-              placeholder="Ex: Fraldas tamanho P, Pomada de assadura, Lençol..."
+              placeholder="Ex: Fraldas RN, Camisola de Amamentação, Carregador de celular..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -270,12 +407,12 @@ export default function Checklists() {
           </div>
 
           <div className="form-group" style={{ flex: '1 1 200px', marginBottom: 0 }}>
-            <label className="form-label">Categoria</label>
+            <label className="form-label">Categoria de Destino</label>
             <select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="maternidade_bebe">🍼 Mala do Bebê</option>
               <option value="maternidade_mae">🤰 Mala da Mãe</option>
               <option value="maternidade_acompanhante">🎒 Mala do Acompanhante</option>
-              <option value="documentos">📑 Documentos</option>
+              <option value="documentos">📑 Documentos da Maternidade</option>
               <option value="enxoval">🧸 Enxoval do Bebê</option>
               <option value="quarto">🛏️ Quarto & Móveis</option>
               <option value="outros">📝 Outros Itens</option>
@@ -288,14 +425,17 @@ export default function Checklists() {
         </form>
       </div>
 
-      {/* Filtros de Categoria (Pills) */}
+      {/* Filtros Rápidos de Categoria (Pills) - no-print */}
       {items.length > 0 && (
-        <div className="filter-pills-row">
+        <div className="filter-pills-row no-print">
           <button
-            onClick={() => setSelectedFilter('all')}
+            onClick={() => {
+              setSelectedFilter('all');
+              soundSynthesizer.playPop();
+            }}
             className={`filter-pill ${selectedFilter === 'all' ? 'filter-pill-active' : ''}`}
           >
-            Todas ({items.length})
+            Todas as Categorias ({items.length})
           </button>
 
           {presentCategories.map((catKey) => {
@@ -306,7 +446,10 @@ export default function Checklists() {
             return (
               <button
                 key={catKey}
-                onClick={() => setSelectedFilter(catKey)}
+                onClick={() => {
+                  setSelectedFilter(catKey);
+                  soundSynthesizer.playPop();
+                }}
                 className={`filter-pill ${selectedFilter === catKey ? 'filter-pill-active' : ''}`}
               >
                 {catInfo.emoji} {catInfo.label} ({catDone}/{catCount})
@@ -321,34 +464,37 @@ export default function Checklists() {
         .filter((catKey) => selectedFilter === 'all' || selectedFilter === catKey)
         .map((catKey) => {
           const catInfo = CATEGORY_MAP[catKey] || { label: catKey, emoji: '📦' };
-          const catItems = items.filter((i) => i.category === catKey);
+          const catItems = filteredItems.filter((i) => i.category === catKey);
           if (catItems.length === 0) return null;
 
-          const catCompleted = catItems.filter((i) => i.is_completed).length;
-          const catPercentage = Math.round((catCompleted / catItems.length) * 100);
+          const totalCatItems = items.filter((i) => i.category === catKey);
+          const catCompleted = totalCatItems.filter((i) => i.is_completed).length;
+          const catPercentage = totalCatItems.length > 0 ? Math.round((catCompleted / totalCatItems.length) * 100) : 0;
 
           return (
-            <div key={catKey} className="card">
+            <div key={catKey} className="card" style={{ marginBottom: '20px' }}>
               <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                 <div className="flex-row" style={{ color: 'var(--primary)' }}>
-                  <span style={{ fontSize: '1.3rem' }}>{catInfo.emoji}</span>
-                  <h2 className="card-title" style={{ margin: 0 }}>{catInfo.label}</h2>
+                  <span style={{ fontSize: '1.4rem' }}>{catInfo.emoji}</span>
+                  <div>
+                    <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem' }}>{catInfo.label}</h2>
+                  </div>
                 </div>
 
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  {catCompleted} de {catItems.length} ({catPercentage}%)
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: catPercentage === 100 ? '#10b981' : 'var(--accent)' }}>
+                  {catCompleted} de {totalCatItems.length} ({catPercentage}%)
                 </span>
               </div>
 
               {/* Barra de progresso por categoria */}
-              <div className="progress-container" style={{ height: '6px', margin: '0 0 14px' }}>
+              <div className="progress-container no-print" style={{ height: '6px', margin: '0 0 14px' }}>
                 <div
                   className="progress-bar"
                   style={{
                     width: `${catPercentage}%`,
-                    backgroundColor: catPercentage === 100 ? 'var(--success)' : 'var(--accent)',
+                    backgroundColor: catPercentage === 100 ? '#10b981' : 'var(--accent)',
                   }}
-                ></div>
+                />
               </div>
 
               {catItems.map((item) => (
@@ -358,19 +504,19 @@ export default function Checklists() {
                       type="checkbox"
                       className="checkbox-custom"
                       checked={item.is_completed}
-                      onChange={(e) => handleToggle(e, item.id, item.is_completed)}
+                      onChange={(e) => handleToggle(e, item.id, item.is_completed, item.category)}
                     />
                     <span
                       className={item.is_completed ? 'completed-text' : ''}
                       style={{ fontWeight: 500, cursor: 'pointer', userSelect: 'none', lineHeight: '1.4' }}
-                      onClick={(e) => handleToggle(e, item.id, item.is_completed)}
+                      onClick={(e) => handleToggle(e, item.id, item.is_completed, item.category)}
                     >
                       {item.title}
                     </span>
                   </div>
 
                   <button
-                    className="btn-icon btn-danger-icon"
+                    className="btn-icon btn-danger-icon no-print"
                     onClick={() => handleDelete(item.id)}
                     title="Remover item"
                   >
@@ -390,7 +536,7 @@ export default function Checklists() {
 
       {/* Modal de Modelos Prontos de Checklist */}
       {showTemplateModal && (
-        <div className="lightbox-overlay" onClick={() => setShowTemplateModal(false)}>
+        <div className="lightbox-overlay no-print" onClick={() => setShowTemplateModal(false)}>
           <div
             className="lightbox-content"
             style={{

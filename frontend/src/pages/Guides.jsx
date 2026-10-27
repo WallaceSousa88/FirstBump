@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { Apple, Baby, Activity, Heart, Moon, Shield, Droplets, Info } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Apple, Baby, Activity, Heart, Moon, Shield, Droplets, Info, Search, X, Star, AlertTriangle, ShieldAlert, CheckCircle2, PhoneCall } from 'lucide-react';
+import { soundSynthesizer } from '../utils/soundSynthesizer';
+import { fireSparkleBurst } from '../utils/confetti';
+import { storage } from '../services/storage';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Dados dos Guias
-// ─────────────────────────────────────────────────────────────────────────────
-
-const CATEGORIES = ['Todos', 'Desenvolvimento', 'Alimentação', 'Saúde & Hábitos'];
+const CATEGORIES = ['Todos', '⭐ Favoritos', 'Desenvolvimento', 'Alimentação', 'Saúde & Hábitos'];
 
 const CATEGORY_COLORS = {
   'Desenvolvimento': { bg: '#eff6ff', color: '#2563eb', iconBg: '#dbeafe' },
@@ -231,55 +230,165 @@ const GUIDES_DATA = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Componente
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function Guides() {
   const [expandedId, setExpandedId] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Todos');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = storage.getSetting('guide_favorites');
+      return saved ? JSON.parse(saved.value) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
-  const toggleGuide = (id) => setExpandedId(expandedId === id ? null : id);
+  const toggleGuide = (id) => {
+    soundSynthesizer.playPop();
+    setExpandedId(expandedId === id ? null : id);
+  };
 
-  const filtered = activeCategory === 'Todos'
-    ? GUIDES_DATA
-    : GUIDES_DATA.filter(g => g.category === activeCategory);
+  const handleToggleFavorite = (e, id) => {
+    e.stopPropagation();
+    let updated;
+    if (favorites.includes(id)) {
+      updated = favorites.filter((favId) => favId !== id);
+      soundSynthesizer.playPop();
+    } else {
+      updated = [...favorites, id];
+      soundSynthesizer.playChime();
+      if (e && e.currentTarget) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+    }
+    setFavorites(updated);
+    storage.setSetting('guide_favorites', JSON.stringify(updated));
+  };
+
+  const filtered = useMemo(() => {
+    return GUIDES_DATA.filter((guide) => {
+      // Filtro de Categoria
+      if (activeCategory === '⭐ Favoritos' && !favorites.includes(guide.id)) {
+        return false;
+      }
+      if (activeCategory !== 'Todos' && activeCategory !== '⭐ Favoritos' && guide.category !== activeCategory) {
+        return false;
+      }
+
+      // Filtro de Busca
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesTitle = guide.title.toLowerCase().includes(q);
+        const matchesSummary = guide.summary.toLowerCase().includes(q);
+        const matchesContent = guide.content.some(
+          (c) => c.heading.toLowerCase().includes(q) || c.text.toLowerCase().includes(q)
+        );
+        return matchesTitle || matchesSummary || matchesContent;
+      }
+
+      return true;
+    });
+  }, [activeCategory, searchQuery, favorites]);
 
   return (
     <div>
-      <h1 className="page-title">Biblioteca & Guias</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-        Conteúdo confiável sobre nutrição, desenvolvimento do bebê e hábitos saudáveis para acompanhar cada fase da sua gestação.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+        <div>
+          <h1 className="page-title" style={{ marginBottom: '6px' }}>Biblioteca Clínica & Guias</h1>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+            Orientações médicas embasadas sobre nutrição, desenvolvimento fetal e hábitos saudáveis para cada semana.
+          </p>
+        </div>
+      </div>
+
+      {/* SINAIS DE ALERTA OBSTÉTRICO (QUANDO IR IMEDIATAMENTE À MATERNIDADE) */}
+      <div className="guide-red-flags-card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <ShieldAlert size={24} style={{ color: '#dc2626', flexShrink: 0 }} />
+          <div>
+            <strong style={{ fontSize: '1.05rem', color: '#dc2626', display: 'block' }}>
+              🚨 Sinais de Alerta Obstétrico: Quando Procurar o Pronto-Socorro Imediatamente
+            </strong>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Independentemente da idade gestacional, não espere a próxima consulta se apresentar:
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '10px', marginTop: '12px' }}>
+          <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+            🩸 <b>Sangramento Vaginal:</b> Qualquer sangramento vivo como menstruação.
+          </div>
+          <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+            💧 <b>Perda de Líquido:</b> Escorrimento aquoso contínuo ou em jato (bolsa rota).
+          </div>
+          <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+            🛑 <b>Movimentos Fetais:</b> Queda brusca na movimentação após a 28ª semana.
+          </div>
+          <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+            ⚡ <b>Cefaleia com Escotomas:</b> Dor de cabeça forte com visão embaçada ou luzes.
+          </div>
+        </div>
+      </div>
+
+      {/* Busca em Tempo Real nos Guias */}
+      <div className="guide-search-box">
+        <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <input
+          className="guide-search-input"
+          placeholder="Pesquisar por assunto (ex: ácido fólico, dor nas costas, queijos, exercícios, enjoo)..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
 
       {/* Filtros de Categoria */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '28px' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '999px',
-              border: '1px solid',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              backgroundColor: activeCategory === cat ? 'var(--primary)' : 'transparent',
-              color: activeCategory === cat ? '#fff' : 'var(--text-muted)',
-              borderColor: activeCategory === cat ? 'var(--primary)' : 'var(--border)',
-            }}
-          >
-            {cat}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        {CATEGORIES.map((cat) => {
+          const isSelected = activeCategory === cat;
+          const count = cat === '⭐ Favoritos' ? favorites.length : null;
+
+          return (
+            <button
+              key={cat}
+              onClick={() => {
+                setActiveCategory(cat);
+                soundSynthesizer.playPop();
+              }}
+              style={{
+                padding: '6px 16px',
+                borderRadius: '999px',
+                border: '1px solid',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: isSelected ? 'var(--primary)' : 'var(--surface)',
+                color: isSelected ? '#fff' : 'var(--text-muted)',
+                borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
+                boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
+              }}
+            >
+              {cat} {count !== null ? `(${count})` : ''}
+            </button>
+          );
+        })}
       </div>
 
       {/* Lista de Guias */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {filtered.map(guide => {
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {filtered.map((guide) => {
           const isOpen = expandedId === guide.id;
+          const isFavorited = favorites.includes(guide.id);
           const colors = CATEGORY_COLORS[guide.category] || {};
           const Icon = guide.icon;
 
@@ -291,42 +400,49 @@ export default function Guides() {
                 cursor: 'pointer',
                 padding: '20px 24px',
                 marginBottom: 0,
-                borderLeft: isOpen ? `4px solid ${colors.color}` : '4px solid transparent',
-                transition: 'border-color 0.2s',
+                borderLeft: isOpen ? `4px solid ${colors.color || 'var(--accent)'}` : '4px solid transparent',
+                transition: 'border-color 0.2s, transform 0.15s, box-shadow 0.2s',
               }}
               onClick={() => toggleGuide(guide.id)}
             >
               {/* Cabeçalho */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{
-                  color: colors.color,
-                  backgroundColor: colors.iconBg,
-                  padding: '10px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  flexShrink: 0,
-                }}>
+                <div
+                  style={{
+                    color: colors.color,
+                    backgroundColor: colors.iconBg,
+                    padding: '10px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    flexShrink: 0,
+                  }}
+                >
                   <Icon size={22} />
                 </div>
 
                 <div style={{ flex: 1 }}>
-                  <span style={{
-                    display: 'inline-block',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: colors.color,
-                    backgroundColor: colors.bg,
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    marginBottom: '5px',
-                  }}>
-                    {guide.category}
-                  </span>
-                  <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: 'var(--primary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                        color: colors.color,
+                        backgroundColor: colors.bg,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                      }}
+                    >
+                      {guide.category}
+                    </span>
+                  </div>
+
+                  <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary)' }}>
                     {guide.title}
                   </h2>
+
                   {!isOpen && (
                     <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
                       {guide.summary}
@@ -334,14 +450,26 @@ export default function Guides() {
                   )}
                 </div>
 
-                <div style={{
-                  color: 'var(--text-muted)',
-                  fontSize: '1.4rem',
-                  fontWeight: 300,
-                  flexShrink: 0,
-                  width: '24px',
-                  textAlign: 'center',
-                }}>
+                {/* Botão de Favoritar */}
+                <button
+                  className="btn-icon"
+                  onClick={(e) => handleToggleFavorite(e, guide.id)}
+                  title={isFavorited ? 'Remover dos favoritos' : 'Favoritar este guia'}
+                  style={{ color: isFavorited ? '#eab308' : 'var(--text-muted)', padding: '6px' }}
+                >
+                  <Star size={19} fill={isFavorited ? '#eab308' : 'none'} />
+                </button>
+
+                <div
+                  style={{
+                    color: 'var(--text-muted)',
+                    fontSize: '1.4rem',
+                    fontWeight: 300,
+                    flexShrink: 0,
+                    width: '24px',
+                    textAlign: 'center',
+                  }}
+                >
                   {isOpen ? '−' : '+'}
                 </div>
               </div>
@@ -350,25 +478,29 @@ export default function Guides() {
               {isOpen && (
                 <div
                   style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}
-                  onClick={e => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {guide.content.map((section, idx) => (
                     <div key={idx} style={{ marginBottom: '20px' }}>
-                      <h3 style={{
-                        fontSize: '0.95rem',
-                        fontWeight: 700,
-                        color: 'var(--primary)',
-                        marginBottom: '8px',
-                      }}>
+                      <h3
+                        style={{
+                          fontSize: '0.98rem',
+                          fontWeight: 700,
+                          color: 'var(--primary)',
+                          marginBottom: '8px',
+                        }}
+                      >
                         {section.heading}
                       </h3>
-                      <p style={{
-                        fontSize: '0.95rem',
-                        color: 'var(--text-main)',
-                        whiteSpace: 'pre-wrap',
-                        lineHeight: '1.75',
-                        margin: 0,
-                      }}>
+                      <p
+                        style={{
+                          fontSize: '0.95rem',
+                          color: 'var(--text-main)',
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: '1.75',
+                          margin: 0,
+                        }}
+                      >
                         {section.text}
                       </p>
                     </div>
@@ -381,7 +513,9 @@ export default function Guides() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="empty-state card">Nenhum guia encontrado para essa categoria.</div>
+        <div className="empty-state card">
+          Nenhum guia encontrado para a busca "{searchQuery}" ou categoria selecionada.
+        </div>
       )}
     </div>
   );
