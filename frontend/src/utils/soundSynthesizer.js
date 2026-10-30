@@ -76,9 +76,70 @@ class SoundSynthesizer {
       case 'wind':
         this.startWind();
         break;
+      case 'lullaby':
+        this.startLullaby();
+        break;
       default:
         this.startPinkNoise();
     }
+  }
+
+  // ── 0. Canção de Ninar Celeste & Caixa de Música ────────────────────────────
+  startLullaby() {
+    // Sequência suave pentatônica de caixinha de música (Brahms / Lullaby celestial)
+    const melody = [
+      { note: 392.00, dur: 0.6 }, // G4
+      { note: 392.00, dur: 0.6 }, // G4
+      { note: 440.00, dur: 0.9 }, // A4
+      { note: 392.00, dur: 0.6 }, // G4
+      { note: 523.25, dur: 0.9 }, // C5
+      { note: 493.88, dur: 1.2 }, // B4
+      { note: 392.00, dur: 0.6 }, // G4
+      { note: 392.00, dur: 0.6 }, // G4
+      { note: 440.00, dur: 0.9 }, // A4
+      { note: 392.00, dur: 0.6 }, // G4
+      { note: 587.33, dur: 0.9 }, // D5
+      { note: 523.25, dur: 1.4 }, // C5
+    ];
+
+    let noteIdx = 0;
+
+    const playMusicBoxNote = (freq, duration, time) => {
+      if (this.currentSoundType !== 'lullaby') return;
+      const osc = this.ctx.createOscillator();
+      const oscHarmonic = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, time);
+
+      oscHarmonic.type = 'triangle';
+      oscHarmonic.frequency.setValueAtTime(freq * 2.005, time); // Brilho metálico sutil
+
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.22, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+      osc.connect(gain);
+      oscHarmonic.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(time);
+      oscHarmonic.start(time);
+      osc.stop(time + duration + 0.05);
+      oscHarmonic.stop(time + duration + 0.05);
+    };
+
+    const cycle = () => {
+      if (this.currentSoundType !== 'lullaby') return;
+      const current = melody[noteIdx];
+      const now = this.ctx.currentTime;
+      playMusicBoxNote(current.note, current.dur, now);
+      noteIdx = (noteIdx + 1) % melody.length;
+    };
+
+    cycle();
+    this.intervalId = setInterval(cycle, 1200);
   }
 
   // ── 1. Batimentos Cardíacos Intrauterinos (Útero Materno) ────────────────────

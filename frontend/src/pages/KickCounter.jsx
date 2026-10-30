@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Footprints, Timer, Sparkles, CheckCircle2, RotateCcw, Trash2, Undo2, Info, AlertTriangle, Heart, Clock, Zap } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Footprints, Timer, Sparkles, CheckCircle2, RotateCcw, Trash2, Undo2, Info, AlertTriangle, Heart, Clock, Zap, Share2, Copy, Check } from 'lucide-react';
 import { storage } from '../services/storage';
 import { fireConfetti, fireHeartBurst, fireSparkleBurst } from '../utils/confetti';
 import { soundSynthesizer } from '../utils/soundSynthesizer';
@@ -14,6 +14,7 @@ export default function KickCounter() {
   const [feedbackMsg, setFeedbackMsg] = useState(null);
   const [isRippling, setIsRippling] = useState(false);
   const [movementType, setMovementType] = useState('chute');
+  const [copiedToast, setCopiedToast] = useState(false);
 
   const timerRef = useRef(null);
   const TARGET_KICKS = 10;
@@ -41,6 +42,18 @@ export default function KickCounter() {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
+  // Avaliação do Vigor / Velocidade de Movimentação
+  const vigorInfo = useMemo(() => {
+    if (kicks.length === 0) return null;
+    if (elapsedSeconds <= 1200) { // < 20 min
+      return { label: '⚡ Atividade Muito Vigorosa', class: 'kick-vigor-vigorous', desc: 'Bebê em momento de pico de energia e vitalidade!' };
+    } else if (elapsedSeconds <= 3600) { // 20 a 60 min
+      return { label: '🌸 Padrão Ideal & Saudável', class: 'kick-vigor-optimal', desc: 'Ritmo perfeito de movimentação fetal recomendado pelos obstetras.' };
+    } else {
+      return { label: '🧘 Ritmo Calmo / Soneca', class: 'kick-vigor-calm', desc: 'Movimentos mais espaçados; o bebê pode estar adormecendo.' };
+    }
+  }, [kicks.length, elapsedSeconds]);
+
   // Registrar um novo chute
   const handleRegisterKick = (e) => {
     const now = Date.now();
@@ -52,11 +65,18 @@ export default function KickCounter() {
       setSessionStartTime(now);
     }
 
+    const previousKick = kicks[kicks.length - 1];
+    let intervalSec = null;
+    if (previousKick) {
+      intervalSec = Math.round((now - previousKick.timestamp) / 1000);
+    }
+
     const newKick = {
       id: kicks.length + 1,
       type: movementType,
       time: new Date(now).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       timestamp: now,
+      intervalSeconds: intervalSec,
     };
 
     const nextKicks = [...kicks, newKick];
@@ -83,7 +103,7 @@ export default function KickCounter() {
     // Se completou a meta de 10 chutes
     if (nextKicks.length >= TARGET_KICKS) {
       setIsCompleted(true);
-      soundSynthesizer.playChime();
+      soundSynthesizer.playSuccessChord();
       if (e && e.currentTarget) {
         const rect = e.currentTarget.getBoundingClientRect();
         fireConfetti({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, count: 85 });
@@ -102,6 +122,7 @@ export default function KickCounter() {
     const nextKicks = kicks.slice(0, -1);
     setKicks(nextKicks);
     setIsCompleted(false);
+    soundSynthesizer.playPop();
     if (nextKicks.length === 0) {
       setSessionStartTime(null);
       setElapsedSeconds(0);
@@ -118,6 +139,7 @@ export default function KickCounter() {
     setElapsedSeconds(0);
     setIsCompleted(false);
     setNotes('');
+    soundSynthesizer.playPop();
   };
 
   // Salvar sessão no histórico
@@ -143,13 +165,41 @@ export default function KickCounter() {
     setIsCompleted(false);
     setNotes('');
 
+    soundSynthesizer.playChime();
     setFeedbackMsg('Sessão de contagem de chutes salva com sucesso!');
     setTimeout(() => setFeedbackMsg(null), 3500);
   };
 
   const handleDeleteSession = (id) => {
     storage.deleteKickSession(id);
+    soundSynthesizer.playPop();
     refreshSessions();
+  };
+
+  // Compartilhar Resumo no WhatsApp do Obstetra / Família
+  const handleShareWhatsApp = (e) => {
+    const timeStr = formatTime(elapsedSeconds);
+    const dateFormatted = new Date().toLocaleDateString('pt-BR');
+    const clockFormatted = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const text = `👣 *FIRSTBUMP · REGISTRO DE MOVIMENTAÇÃO FETAL*
+🗓️ *Data:* ${dateFormatted} às ${clockFormatted}
+⏱️ *Tempo para 10 movimentos:* ${timeStr}
+⚡ *Classificação:* ${vigorInfo?.label || 'Concluído'}
+${notes ? `📝 *Observação:* ${notes}\n` : ''}
+_Monitoramento preventivo realizado no FirstBump_`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        setCopiedToast(true);
+        soundSynthesizer.playCopyChime();
+        if (e && e.currentTarget) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          fireSparkleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+        setTimeout(() => setCopiedToast(false), 3000);
+      });
+    }
   };
 
   // Estatísticas das sessões
@@ -162,9 +212,9 @@ export default function KickCounter() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
         <div>
-          <h1 className="page-title" style={{ marginBottom: '6px' }}>Contador de Chutes do Bebê</h1>
+          <h1 className="page-title" style={{ marginBottom: '6px' }}>Contador de Chutes & Vitalidade Fetal</h1>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>
-            Monitore o padrão de movimentos do seu bebê no 3º trimestre (Regra dos 10 Chutes / OMS).
+            Monitore o padrão de movimentação do seu bebê (Regra dos 10 Chutes OMS / Febrasgo).
           </p>
         </div>
       </div>
@@ -183,6 +233,7 @@ export default function KickCounter() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
+            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.1)',
           }}
         >
           <CheckCircle2 size={18} />
@@ -193,12 +244,21 @@ export default function KickCounter() {
       {/* Hero Card Interativo de Contagem */}
       <div className="kick-hero-card">
         {/* Status e Tempo */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '0.92rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
           <Clock size={16} />
           <span>
             {sessionStartTime ? `Tempo decorrido: ${formatTime(elapsedSeconds)}` : 'Toque no botão para iniciar a contagem'}
           </span>
         </div>
+
+        {/* Badge Dinâmico de Vigor Fetal */}
+        {vigorInfo && (
+          <div style={{ marginBottom: '14px' }}>
+            <span className={`kick-vigor-pill ${vigorInfo.class}`}>
+              {vigorInfo.label}
+            </span>
+          </div>
+        )}
 
         {/* Seletor de Tipo de Movimento Fetal */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -218,9 +278,9 @@ export default function KickCounter() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                padding: '5px 12px',
+                padding: '6px 14px',
                 borderRadius: '999px',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 fontWeight: movementType === type.id ? 700 : 500,
                 border: movementType === type.id ? '1.5px solid var(--accent)' : '1px solid var(--border)',
                 backgroundColor: movementType === type.id ? 'var(--accent-soft)' : 'var(--surface)',
@@ -251,21 +311,31 @@ export default function KickCounter() {
             style={{ opacity: isCompleted ? 0.6 : 1 }}
             title="Registrar movimento do bebê"
           >
-            <Footprints size={44} style={{ marginBottom: '4px' }} />
-            <span style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>
+            <Footprints size={46} style={{ marginBottom: '4px' }} />
+            <span style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>
               {kicks.length} / {TARGET_KICKS}
             </span>
-            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9, marginTop: '4px' }}>
+            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.9, marginTop: '4px' }}>
               {isCompleted ? 'Concluído' : 'Registrar'}
             </span>
           </button>
         </div>
 
-        {/* Indicador de Último Movimento */}
-        {kicks.length > 0 && !isCompleted && (
-          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-            <Zap size={14} style={{ color: '#f59e0b' }} />
-            <span>Último registrado: <b>{kicks[kicks.length - 1].time}</b> ({kicks[kicks.length - 1].type || 'chute'})</span>
+        {/* Linha do Tempo Horizontal dos Movimentos Registrados */}
+        {kicks.length > 0 && (
+          <div className="kick-stream-container">
+            {kicks.map((k, idx) => (
+              <div key={k.id || idx} className="kick-stream-chip">
+                <span>{k.type === 'soluco' ? '🫧' : k.type === 'cambalhota' ? '🌀' : '🦶'}</span>
+                <b>#{idx + 1}</b>
+                <span style={{ color: 'var(--text-muted)' }}>{k.time.slice(0, 5)}</span>
+                {k.intervalSeconds && (
+                  <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 600 }}>
+                    +{Math.round(k.intervalSeconds)}s
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
@@ -306,18 +376,18 @@ export default function KickCounter() {
               backgroundColor: 'var(--surface)',
               border: '2px solid #10b981',
               borderRadius: 'var(--radius-lg)',
-              padding: '20px',
-              maxWidth: '480px',
+              padding: '22px 24px',
+              maxWidth: '500px',
               margin: '24px auto 0',
-              boxShadow: 'var(--shadow-md)',
+              boxShadow: '0 8px 25px rgba(16, 185, 129, 0.15)',
               textAlign: 'center',
             }}
           >
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontWeight: 700, fontSize: '1.1rem', marginBottom: '6px' }}>
-              <Sparkles size={20} /> Meta de 10 Chutes Atingida!
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontWeight: 800, fontSize: '1.2rem', marginBottom: '6px' }}>
+              <Sparkles size={22} /> Meta de 10 Chutes Atingida!
             </div>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '0 0 16px' }}>
-              Seu bebê atingiu 10 movimentos em <b>{formatTime(elapsedSeconds)}</b>. Excelente sinal de atividade e bem-estar!
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: '0 0 16px', lineHeight: '1.5' }}>
+              Seu bebê atingiu 10 movimentos em <b>{formatTime(elapsedSeconds)}</b>. Excelente sinal de atividade e bem-estar fetal!
             </p>
 
             <form onSubmit={handleSaveSession}>
@@ -329,10 +399,30 @@ export default function KickCounter() {
                 style={{ marginBottom: '12px', fontSize: '0.85rem' }}
               />
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button className="btn btn-primary" type="submit" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button className="btn btn-primary" type="submit" style={{ flex: 1, fontWeight: 600 }}>
                   Salvar Sessão
                 </button>
+
+                <button
+                  type="button"
+                  onClick={handleShareWhatsApp}
+                  className="btn"
+                  style={{
+                    border: '1.5px solid #25d366',
+                    background: copiedToast ? '#25d366' : 'rgba(37, 211, 102, 0.1)',
+                    color: copiedToast ? '#ffffff' : '#15803d',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontWeight: 600,
+                  }}
+                  title="Copiar dados para enviar ao Obstetra"
+                >
+                  {copiedToast ? <Check size={16} /> : <Share2 size={16} />}
+                  {copiedToast ? 'Copiado!' : 'WhatsApp'}
+                </button>
+
                 <button
                   type="button"
                   onClick={handleResetSession}
@@ -424,8 +514,8 @@ export default function KickCounter() {
                         </span>
                       </td>
                       <td>
-                        <span style={{ padding: '2px 8px', borderRadius: '999px', background: 'rgba(219, 39, 119, 0.15)', color: '#db2777', fontWeight: 600, fontSize: '0.8rem' }}>
-                          {sess.kickCount} chutes
+                        <span style={{ padding: '3px 10px', borderRadius: '999px', background: 'rgba(219, 39, 119, 0.15)', color: '#db2777', fontWeight: 600, fontSize: '0.8rem' }}>
+                          {sess.kickCount} movimentos
                         </span>
                       </td>
                       <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '220px' }}>
